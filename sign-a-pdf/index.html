@@ -1,0 +1,58 @@
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Sign a pdf from Grist</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css"/>
+    <script src="https://docs.getgrist.com/grist-plugin-api.js"></script>
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="https://mozilla.github.io/pdf.js/build/pdf.mjs" type="module"></script>
+    <script src="https://cdn.jsdelivr.net/npm/konva@9.3.15/lib/index.min.js"></script>
+    <script src="https://unpkg.com/konva@9.3.15/konva.min.js"></script>
+    <script src="https:/script.js" defer></script>
+  </head>
+  <body>
+    <button id="reload-me">Reload me</button>
+    <section class="hero is-primary is-small">
+      <div class="hero-body">
+	<h1 class="title">Sign a pdf</h1>
+	<h4 class="subtitle">within Grist</h4>
+      </div>
+    </section>
+    <section class="section">
+      <div class="buttons is-grouped">
+	<div class="file is-aligned-items-center">
+	  <label class="file-label">
+	    <input class="file-input" type="file" id="signature" />
+	    <span class="file-cta">
+	      <span class="file-icon">
+		<i class="fa fa-upload"></i>
+	      </span>
+	      <span class="file-label">Choose a file…</span>
+	    </span>
+	  </label>
+	</div>
+	<button class="button is-primary" id="save-it">Save it signed</button>
+      </div>
+    </section>
+    <section class="section">
+      <div class="is-flex is-justify-content-center">
+	<div style="position:relative">
+	  <canvas class="box" id="pdf-canvas"></canvas>
+	  <div id="konva-container" style="position:absolute; left:0; top:0;"></div>
+	</div>
+      </div>
+    </section>
+    <section class="section">
+      <pre id="dumpbin"></pre>
+    </section>
+    <footer class="footer">
+      <container class="is-flex is-justify-content-center">
+	<figure>
+	  <a href="https://ut7.github.io/welovegrist/" target="_blank"><img src="ut7_loves_grist.png" /></a>
+	</figure>
+      </contrainer>
+    </footer>
+  </body>
+</html>

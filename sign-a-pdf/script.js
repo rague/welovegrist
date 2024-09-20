@@ -16,6 +16,10 @@ let xPos = 0.75,
   signatureScale = 0.15,
   signatureBlob = null;
 
+function getSettings() {
+  return { signatureBlob, xPos, yPos, signatureScale };
+}
+
 const signatureStage = new Konva.Stage({
   container: "konva-container",
 });
@@ -118,25 +122,29 @@ document.addEventListener("DOMContentLoaded", async () => {
   const dumpbin = document.getElementById("dumpbin");
 
   grist.ready({
-    columns: [{ name: "entree" }, { name: "sortie" }],
+    columns: [
+      { name: "source", type: "Attachments"},
+      { name: "target", type: "Attachments"},
+      { name: "signed", optional: true, type: "Bool" }
+    ],
   });
 
   let gristRecord;
   let gristMappings;
+  const sourceAttachmentIndex = 0;
+  let sourceAttachmentId;
 
-  grist.onRecord(async function (record, mappings) {
+  grist.onRecord(async function (rawRecord, mappings) {
     try {
-      gristRecord = record;
+      //dumpbin.innerText = JSON.stringify(mappings, null, 2) + "\n";
       gristMappings = mappings;
 
       inputBlob = signedBlob = null;
 
-      //dumpbin.innerText = JSON.stringify(record, null, 2) + "\n";
-      const mappedRecord = grist.mapColumnNames(record);
-      //dumpbin.innerText += JSON.stringify(mappedRecord, null, 2) + "\n";
+      gristRecord = grist.mapColumnNames(rawRecord);
 
-      const inputId = mappedRecord.entree[0];
-      inputBlob = await getAttachmentBlob(inputId);
+      sourceAttachmentId = gristRecord.source[sourceAttachmentIndex];
+      inputBlob = await getAttachmentBlob(sourceAttachmentId);
 
       await updatePreview(inputBlob);
       await previewSignature(getSettings());
@@ -151,12 +159,28 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       const attachmentId = await uploadAttachment(signedBlob, "signed.pdf");
 
-      const mappedRecord = grist.mapColumnNames(gristRecord);
+      let updatedTargetValue;
+      if (gristRecord.target == null) {
+	updatedTargetValue = ['L', attachmentId]
+      } else {
+	updatedTargetValue = gristRecord.target.slice();
+	const index = updatedTargetValue.indexOf(sourceAttachmentId);
+	if (index !== -1) {
+	  updatedTargetValue[index] = attachmentId;
+	} else {
+	  updatedTargetValue.push(attachmentId);
+	}
+	updatedTargetValue.unshift('L');
+      }
 
+      const fields = { [gristMappings.target]: updatedTargetValue };
+      if (gristMappings.signed) {
+	fields[gristMappings.signed] = true;
+      }
       const table = grist.getTable();
       const result = await table.update({
         id: gristRecord.id,
-        fields: { [gristMappings.sortie]: ["L", attachmentId] },
+        fields: fields
       });
     } catch (e) {
       dumpbin.innerText += `ouch! ${e.message}\n${e.stack}`;
@@ -181,7 +205,6 @@ async function applySignature({ signatureBlob, xPos, yPos, signatureScale }) {
   const dumpbin = document.getElementById("dumpbin");
   if (inputBlob?.type != "application/pdf") {
     dumpbin.innerText += `ouch! this is not a pdf`;
-
     return;
   }
   if (signatureBlob?.type != "image/png") {
@@ -288,10 +311,6 @@ async function previewSignature({ signatureBlob, xPos, yPos, signatureScale }) {
       await updateSignatureSizeAndLocation(e.currentTarget.attrs);
     });
   });
-}
-
-function getSettings() {
-  return { signatureBlob, xPos, yPos, signatureScale };
 }
 
 async function updateSignatureSizeAndLocation({

@@ -1,7 +1,7 @@
-/* global grist, PDFLib, Konva */
-const { degrees, PDFDocument, rgb, StandardFonts } = PDFLib;
-
-const { pdfjsLib } = window;
+/* global grist */
+import { PDFDocument } from 'https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/+esm';
+import Konva from 'https://cdn.jsdelivr.net/npm/konva@9.3.15/+esm';
+import * as pdfjsLib from 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.6.82/+esm';
 pdfjsLib.GlobalWorkerOptions.workerSrc =
   "//cdn.jsdelivr.net/npm/pdfjs-dist@4.6.82/build/pdf.worker.min.mjs";
 
@@ -123,9 +123,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   grist.ready({
     columns: [
-      { name: "source", type: "Attachments"},
-      { name: "target", type: "Attachments"},
-      { name: "signed", optional: true, type: "Bool" }
+      { name: "source", type: "Attachments" },
+      { name: "target", type: "Attachments" },
+      { name: "signed", optional: true, type: "Bool" },
     ],
   });
 
@@ -161,41 +161,40 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       let updatedTargetValue;
       if (gristRecord.target == null) {
-	updatedTargetValue = ['L', attachmentId]
+        updatedTargetValue = ["L", attachmentId];
       } else {
-	updatedTargetValue = gristRecord.target.slice();
-	const index = updatedTargetValue.indexOf(sourceAttachmentId);
-	if (index !== -1) {
-	  updatedTargetValue[index] = attachmentId;
-	} else {
-	  updatedTargetValue.push(attachmentId);
-	}
-	updatedTargetValue.unshift('L');
+        updatedTargetValue = gristRecord.target.slice();
+        const index = updatedTargetValue.indexOf(sourceAttachmentId);
+        if (index !== -1) {
+          updatedTargetValue[index] = attachmentId;
+        } else {
+          updatedTargetValue.push(attachmentId);
+        }
+        updatedTargetValue.unshift("L");
       }
 
       const fields = { [gristMappings.target]: updatedTargetValue };
       if (gristMappings.signed) {
-	fields[gristMappings.signed] = true;
+        fields[gristMappings.signed] = true;
       }
       const table = grist.getTable();
       const result = await table.update({
         id: gristRecord.id,
-        fields: fields
+        fields: fields,
       });
     } catch (e) {
       dumpbin.innerText += `ouch! ${e.message}\n${e.stack}`;
     }
   });
-  
+
   const signatureInput = document.getElementById("signature");
   signatureInput.onchange = async function (event) {
     signatureBlob = signatureInput.files[0];
     await saveSignature(signatureBlob);
     const settings = getSettings();
     await previewSignature(settings);
-    //await previewSignature(settings);
   };
-  
+
   signatureBlob = loadSignature();
   const preview = document.getElementById("preview");
   // preview.setAttribute("src", URL.createObjectURL(signatureBlob));
@@ -260,21 +259,19 @@ async function saveSignature(signatureBlob) {
 
 function loadSignature() {
   const data = localStorage.getItem("signature");
-  if (! data) return; 
-  const parts = data.split(":")[1].split(",");;
+  if (!data) return;
+  const parts = data.split(":")[1].split(",");
   const format = parts[0].split(";")[0];
-  
+
   const content = atob(parts[1]);
-  var arrayBuffer = new ArrayBuffer(content.length);
-  var bytes = new Uint8Array(arrayBuffer);
-  for (var i = 0; i < content.length; i++) {
-      bytes[i] = content.charCodeAt(i);
+  const arrayBuffer = new ArrayBuffer(content.length);
+  const bytes = new Uint8Array(arrayBuffer);
+  for (let i = 0; i < content.length; i++) {
+    bytes[i] = content.charCodeAt(i);
   }
-  
+
   return new Blob([new DataView(arrayBuffer)], { type: format });
 }
-
-let node = null;
 
 async function previewSignature({ signatureBlob, xPos, yPos, signatureScale }) {
   if (!signatureBlob) return;
@@ -299,7 +296,7 @@ async function previewSignature({ signatureBlob, xPos, yPos, signatureScale }) {
       signatureBlob: signatureBlob,
     });
     layer.destroyChildren();
-    var transformer = new Konva.Transformer({
+    const transformer = new Konva.Transformer({
       nodes: [node],
       rotateEnabled: false,
       flipEnabled: false,

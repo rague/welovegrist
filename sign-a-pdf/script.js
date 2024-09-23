@@ -3,7 +3,7 @@ const { degrees, PDFDocument, rgb, StandardFonts } = PDFLib;
 
 const { pdfjsLib } = window;
 pdfjsLib.GlobalWorkerOptions.workerSrc =
-  "//mozilla.github.io/pdf.js/build/pdf.worker.mjs";
+  "//cdn.jsdelivr.net/npm/pdfjs-dist@4.6.82/build/pdf.worker.min.mjs";
 
 let pdfDoc = null,
   pageNum = 1,

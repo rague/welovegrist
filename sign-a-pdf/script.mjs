@@ -204,8 +204,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 function signatureUpdated(signature) {
-  dumpbin.innerText += "loadSignature called\n";
-  dumpbin.innerText += signature;
   if (signature) {
     turnOffConfigurationPanel();
     document.getElementById('forget').removeAttribute("disabled");
@@ -221,12 +219,12 @@ function signatureUpdated(signature) {
 
 function turnOnConfigurationPanel() {
     document.getElementById('configuration').style = 'block';
-    document.getElementById('configuration').classList.add('is-active');
+    document.getElementById('configure-tab').classList.add('is-active');
     document.getElementById('main').style.display = 'none';
 }
 function turnOffConfigurationPanel() {
     document.getElementById('configuration').style.display = 'none';
-    document.getElementById('configuration').classList.remove('is-active');
+    document.getElementById('configure-tab').classList.remove('is-active');
     document.getElementById('main').style.display = 'block';
 }
 
@@ -288,7 +286,6 @@ async function saveSignature(signatureBlob) {
 }
 
 function forgetSignatureFile() {
-  dumpbin.innerText += "trying to forget...\n"
   const data = localStorage.removeItem("signature");
   signatureBlob = null;
   signatureUpdated(signatureBlob);

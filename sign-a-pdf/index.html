@@ -9,19 +9,19 @@
     <script src="script.mjs" type="module" defer></script>
   </head>
   <body>
-    <section class="hero is-primary is-small">
-      <div class="hero-body">
-	<h1 class="title">Sign a pdf</h1>
-	<h4 class="subtitle">within Grist</h4>
-      </div>
-    </section>
     <div class="tabs is-small is-right">
       <ul>
 	<li><a id="reload-me">reload</a></li>
-	<li><a class="is-active" id="configure-me">configure</a></li>
+	<li id="configure-tab"><a id="configure-me">configure</a></li>
       </ul>
     </div>
     <div id="configuration"  style="display: block;">
+      <section class="hero is-primary is-small">
+	<div class="hero-body">
+	  <h1 class="title">Sign a pdf</h1>
+	  <h4 class="subtitle">within Grist</h4>
+	</div>
+      </section>
       <section class="section">
 	<div class="buttons is-grouped">
 	  <div class="file is-aligned-items-center">
@@ -43,25 +43,18 @@
       </section>
     </div>
     <div id="main"  style="display: none;">
-      <section class="section">
-	<div class="container">
-	  <div class="buttons is-grouped">
-	    <button class="button is-primary" id="save-it">Sign this document</button>
-	  </div>
-	</div>
-      </section>
-      <section class="section">
+      <section class="section pt-0">
 	<div class="is-flex is-justify-content-center">
 	  <div style="position:relative">
 	    <canvas class="box" id="pdf-canvas"></canvas>
 	    <div id="konva-container" style="position:absolute; left:0; top:0;"></div>
 	  </div>
 	</div>
+	<div class="is-flex is-justify-content-center">
+	  <button class="button is-primary" id="save-it">Sign this document</button>
+	</div>
       </section>
     </div>
-    <section class="section">
-      <pre id="dumpbin"></pre>
-    </section>
     <footer class="footer">
       <div class="is-flex is-justify-content-center">
 	<figure>
@@ -69,5 +62,8 @@
 	</figure>
       </div>
     </footer>
+    <section class="section">
+      <pre id="dumpbin"></pre>
+    </section>
   </body>
 </html>

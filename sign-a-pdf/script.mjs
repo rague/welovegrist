@@ -67,10 +67,13 @@ async function renderPage() {
   }
 }
 
-const reloadButton = document.getElementById("reload-me");
-reloadButton.onclick = function () {
-  window.location.reload();
-};
+document.getElementById("reload-me").addEventListener("click", 
+  function () { window.location.reload(); }
+);
+
+document.getElementById("configure-me").addEventListener("click",turnOnConfigurationPanel);
+
+document.getElementById("forget").addEventListener("click",forgetSignatureFile);
 
 async function getAttachmentBlob(id) {
   const tokenInfo = await grist.docApi.getAccessToken({ readOnly: true });
@@ -147,7 +150,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       inputBlob = await getAttachmentBlob(sourceAttachmentId);
 
       await updatePreview(inputBlob);
-      await previewSignature(getSettings());
+      await previewSignedDocument(getSettings());
     } catch (e) {
       dumpbin.innerText += `ouch! ${e.message}\n${e.stack}`;
     }
@@ -191,14 +194,41 @@ document.addEventListener("DOMContentLoaded", async () => {
   signatureInput.onchange = async function (event) {
     signatureBlob = signatureInput.files[0];
     await saveSignature(signatureBlob);
+    signatureUpdated(signatureBlob)
     const settings = getSettings();
-    await previewSignature(settings);
+    await previewSignedDocument(settings);
   };
 
   signatureBlob = loadSignature();
-  const preview = document.getElementById("preview");
-  // preview.setAttribute("src", URL.createObjectURL(signatureBlob));
+  signatureUpdated(signatureBlob);
 });
+
+function signatureUpdated(signature) {
+  dumpbin.innerText += "loadSignature called\n";
+  dumpbin.innerText += signature;
+  if (signature) {
+    turnOffConfigurationPanel();
+    document.getElementById('forget').removeAttribute("disabled");
+    showSignature(signature)
+    // document.getElementById('signature').src = 'data:image/bmp;base64,'+atobe(signature);
+    // const preview = document.getElementById("preview");
+    // preview.setAttribute("src", URL.createObjectURL(signatureBlob));
+  } else {
+    document.getElementById('forget').setAttribute("disabled","disabled");
+    turnOnConfigurationPanel();
+  }
+}
+
+function turnOnConfigurationPanel() {
+    document.getElementById('configuration').style = 'block';
+    document.getElementById('configuration').classList.add('is-active');
+    document.getElementById('main').style.display = 'none';
+}
+function turnOffConfigurationPanel() {
+    document.getElementById('configuration').style.display = 'none';
+    document.getElementById('configuration').classList.remove('is-active');
+    document.getElementById('main').style.display = 'block';
+}
 
 async function applySignature({ signatureBlob, xPos, yPos, signatureScale }) {
   const dumpbin = document.getElementById("dumpbin");
@@ -257,6 +287,13 @@ async function saveSignature(signatureBlob) {
   reader.readAsDataURL(signatureBlob);
 }
 
+function forgetSignatureFile() {
+  dumpbin.innerText += "trying to forget...\n"
+  const data = localStorage.removeItem("signature");
+  signatureBlob = null;
+  signatureUpdated(signatureBlob);
+}
+
 function loadSignature() {
   const data = localStorage.getItem("signature");
   if (!data) return;
@@ -273,7 +310,7 @@ function loadSignature() {
   return new Blob([new DataView(arrayBuffer)], { type: format });
 }
 
-async function previewSignature({ signatureBlob, xPos, yPos, signatureScale }) {
+async function previewSignedDocument({ signatureBlob, xPos, yPos, signatureScale }) {
   if (!signatureBlob) return;
 
   const layer = new Konva.Layer();
@@ -325,3 +362,14 @@ async function updateSignatureSizeAndLocation({
   signatureScale = originalScale * scaleX;
 }
 
+const showSignature = (blob) => {
+  return new Promise(resolve => {
+    const url = URL.createObjectURL(blob)
+    let img = document.getElementById('signature');
+    img.onload = () => {
+      URL.revokeObjectURL(url)
+      resolve(img)
+    }
+    img.src = url
+  })
+}

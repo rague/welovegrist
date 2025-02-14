@@ -9,46 +9,65 @@
     <script src="script.mjs" type="module" defer></script>
   </head>
   <body>
-    <button id="reload-me">Reload me</button>
     <section class="hero is-primary is-small">
       <div class="hero-body">
 	<h1 class="title">Sign a pdf</h1>
 	<h4 class="subtitle">within Grist</h4>
       </div>
     </section>
-    <section class="section">
-      <div class="buttons is-grouped">
-	<div class="file is-aligned-items-center">
-	  <label class="file-label">
-	    <input class="file-input" type="file" id="signature" />
-	    <span class="file-cta">
-	      <span class="file-icon">
-		<i class="fa fa-upload"></i>
+    <div class="tabs is-small is-right">
+      <ul>
+	<li><a id="reload-me">reload</a></li>
+	<li><a class="is-active" id="configure-me">configure</a></li>
+      </ul>
+    </div>
+    <div id="configuration"  style="display: block;">
+      <section class="section">
+	<div class="buttons is-grouped">
+	  <div class="file is-aligned-items-center">
+	    <label class="file-label">
+	      <input class="file-input" type="file" id="signature" />
+	      <span class="file-cta">
+		<span class="file-icon">
+		  <i class="fa fa-upload"></i>
+		</span>
+		<span class="file-label">Upload your signature</span>
 	      </span>
-	      <span class="file-label">Choose a file…</span>
-	    </span>
-	  </label>
+	    </label>
+	  </div>
 	</div>
-	<button class="button is-primary" id="save-it">Save it signed</button>
-      </div>
-    </section>
-    <section class="section">
-      <div class="is-flex is-justify-content-center">
-	<div style="position:relative">
-	  <canvas class="box" id="pdf-canvas"></canvas>
-	  <div id="konva-container" style="position:absolute; left:0; top:0;"></div>
+	<div class="buttons is-grouped">
+	  <button class="button" id="forget" disabled>Forget signature</button>
 	</div>
-      </div>
-    </section>
+	<img id="signature">
+      </section>
+    </div>
+    <div id="main"  style="display: none;">
+      <section class="section">
+	<div class="container">
+	  <div class="buttons is-grouped">
+	    <button class="button is-primary" id="save-it">Sign this document</button>
+	  </div>
+	</div>
+      </section>
+      <section class="section">
+	<div class="is-flex is-justify-content-center">
+	  <div style="position:relative">
+	    <canvas class="box" id="pdf-canvas"></canvas>
+	    <div id="konva-container" style="position:absolute; left:0; top:0;"></div>
+	  </div>
+	</div>
+      </section>
+    </div>
     <section class="section">
       <pre id="dumpbin"></pre>
     </section>
     <footer class="footer">
-      <container class="is-flex is-justify-content-center">
+      <div class="is-flex is-justify-content-center">
 	<figure>
 	  <a href="https://ut7.github.io/welovegrist/" target="_blank"><img src="ut7_loves_grist.png" /></a>
 	</figure>
-      </contrainer>
+      </div>
     </footer>
   </body>
 </html>

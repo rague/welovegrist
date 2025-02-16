@@ -20,7 +20,7 @@ function getSettings() {
   return { signatureBlob, xPos, yPos, signatureScale };
 }
 
-const signatureStage = new Konva.Stage({
+const documentStage = new Konva.Stage({
   container: "konva-container",
 });
 
@@ -42,8 +42,8 @@ async function renderPage() {
       canvas.style.width = Math.floor(viewport.width) + "px";
       canvas.style.height = Math.floor(viewport.height) + "px";
     }
-    signatureStage.width(viewport.width);
-    signatureStage.height(viewport.height);
+    documentStage.width(viewport.width);
+    documentStage.height(viewport.height);
 
     //    pdfCanvas.parentNode.style.width = Math.floor(viewport.width) + "px";
     //    pdfCanvas.parentNode.style.height = Math.floor(viewport.height) + "px";
@@ -73,8 +73,13 @@ document.getElementById("reload-me").addEventListener("click",
 
 document.getElementById("configure-me").addEventListener("click",turnOnConfigurationPanel);
 
-document.getElementById("forget").addEventListener("click",forgetSignatureFile);
+document.getElementById("forget").addEventListener("click",forgetSignature);
 
+function forgetSignature() {
+  removeSignatureFromLocalStorage();
+  signatureBlob = null;
+  signatureUpdated(signatureBlob);
+}
 async function getAttachmentBlob(id) {
   const tokenInfo = await grist.docApi.getAccessToken({ readOnly: true });
 
@@ -150,7 +155,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       inputBlob = await getAttachmentBlob(sourceAttachmentId);
 
       await updatePreview(inputBlob);
-      await previewSignedDocument(getSettings());
+      await previewPlacedSignatureOnDocument(getSettings());
     } catch (e) {
       dumpbin.innerText += `ouch! ${e.message}\n${e.stack}`;
     }
@@ -190,30 +195,28 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
-  const signatureInput = document.getElementById("signature");
+  const signatureInput = document.getElementById("signature-input");
   signatureInput.onchange = async function (event) {
     signatureBlob = signatureInput.files[0];
-    await saveSignature(signatureBlob);
+    await saveSignatureToLocalStorage(signatureBlob);
     signatureUpdated(signatureBlob)
     const settings = getSettings();
-    await previewSignedDocument(settings);
+    await previewPlacedSignatureOnDocument(settings);
   };
 
-  signatureBlob = loadSignature();
+  signatureBlob = loadSignatureFromLocalStorage();
   signatureUpdated(signatureBlob);
 });
 
-function signatureUpdated(signature) {
-  if (signature) {
+function signatureUpdated(signatureBlob) {
+  if (signatureBlob) {
     turnOffConfigurationPanel();
     document.getElementById('forget').removeAttribute("disabled");
-    showSignature(signature)
-    // document.getElementById('signature').src = 'data:image/bmp;base64,'+atobe(signature);
-    // const preview = document.getElementById("preview");
-    // preview.setAttribute("src", URL.createObjectURL(signatureBlob));
+    displaySignatureFile(signatureBlob);
   } else {
     document.getElementById('forget').setAttribute("disabled","disabled");
     turnOnConfigurationPanel();
+    hideSignatureFile();
   }
 }
 
@@ -272,7 +275,7 @@ async function applySignature({ signatureBlob, xPos, yPos, signatureScale }) {
   signedBlob = new Blob([pdfBytes], { type: "application/pdf" });
 }
 
-async function saveSignature(signatureBlob) {
+async function saveSignatureToLocalStorage(signatureBlob) {
   if (signatureBlob == null) return;
   const reader = new FileReader();
   reader.addEventListener(
@@ -285,13 +288,13 @@ async function saveSignature(signatureBlob) {
   reader.readAsDataURL(signatureBlob);
 }
 
-function forgetSignatureFile() {
+function removeSignatureFromLocalStorage() {
   const data = localStorage.removeItem("signature");
   signatureBlob = null;
   signatureUpdated(signatureBlob);
 }
 
-function loadSignature() {
+function loadSignatureFromLocalStorage() {
   const data = localStorage.getItem("signature");
   if (!data) return;
   const parts = data.split(":")[1].split(",");
@@ -307,22 +310,22 @@ function loadSignature() {
   return new Blob([new DataView(arrayBuffer)], { type: format });
 }
 
-async function previewSignedDocument({ signatureBlob, xPos, yPos, signatureScale }) {
+async function previewPlacedSignatureOnDocument({ signatureBlob, xPos, yPos, signatureScale }) {
   if (!signatureBlob) return;
 
   const layer = new Konva.Layer();
-  signatureStage.destroyChildren();
-  signatureStage.add(layer);
+  documentStage.destroyChildren();
+  documentStage.add(layer);
 
   Konva.Image.fromURL(URL.createObjectURL(signatureBlob), function (node) {
     const signatureAspect = node.height() / node.width();
     const signatureDimensions = {
-      width: signatureStage.width() * signatureScale,
-      height: signatureStage.width() * signatureScale * signatureAspect,
+      width: documentStage.width() * signatureScale,
+      height: documentStage.width() * signatureScale * signatureAspect,
     };
     node.setAttrs({
-      x: signatureStage.width() * xPos - signatureDimensions.width / 2,
-      y: signatureStage.height() * yPos - signatureDimensions.height / 2,
+      x: documentStage.width() * xPos - signatureDimensions.width / 2,
+      y: documentStage.height() * yPos - signatureDimensions.height / 2,
       width: signatureDimensions.width,
       height: signatureDimensions.height,
       draggable: true,
@@ -354,19 +357,29 @@ async function updateSignatureSizeAndLocation({
   originalScale,
   signatureBlob,
 }) {
-  xPos = (x + (width * scaleX) / 2) / signatureStage.width();
-  yPos = (y + (height * scaleY) / 2) / signatureStage.height();
+  xPos = (x + (width * scaleX) / 2) / documentStage.width();
+  yPos = (y + (height * scaleY) / 2) / documentStage.height();
   signatureScale = originalScale * scaleX;
 }
 
-const showSignature = (blob) => {
-  return new Promise(resolve => {
-    const url = URL.createObjectURL(blob)
-    let img = document.getElementById('signature');
-    img.onload = () => {
-      URL.revokeObjectURL(url)
-      resolve(img)
-    }
-    img.src = url
-  })
+function hideSignatureFile() {
+  const node = document.getElementById('signature-display');
+  while (node.firstChild) {
+    node.removeChild(node.lastChild);
+  }
+}
+
+function displaySignatureFile(file) {
+  hideSignatureFile();
+  const node = document.getElementById('signature-display');
+  const img = document.createElement("img");
+  img.classList.add("obj");
+  img.file = file;
+  node.appendChild(img); 
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
 }

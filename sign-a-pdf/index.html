@@ -7,6 +7,9 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css"/>
     <script src="https://docs.getgrist.com/grist-plugin-api.js"></script>
     <script src="script.mjs" type="module" defer></script>
+<style>
+.signature-display img {border: solid; background-color:white;}
+</style>
   </head>
   <body>
     <div class="tabs is-small is-right">
@@ -15,7 +18,7 @@
 	<li id="configure-tab"><a id="configure-me">configure</a></li>
       </ul>
     </div>
-    <div id="configuration"  style="display: block;">
+    <div id="configuration" style="display: block;">
       <section class="hero is-primary is-small">
 	<div class="hero-body">
 	  <h1 class="title">Sign a pdf</h1>
@@ -26,12 +29,12 @@
 	<div class="buttons is-grouped">
 	  <div class="file is-aligned-items-center">
 	    <label class="file-label">
-	      <input class="file-input" type="file" id="signature" />
+	      <input class="file-input" type="file" id="signature-input" />
 	      <span class="file-cta">
 		<span class="file-icon">
 		  <i class="fa fa-upload"></i>
 		</span>
-		<span class="file-label">Upload your signature</span>
+		<span class="file-label">Set signature file</span>
 	      </span>
 	    </label>
 	  </div>
@@ -39,10 +42,10 @@
 	<div class="buttons is-grouped">
 	  <button class="button" id="forget" disabled>Forget signature</button>
 	</div>
-	<img id="signature">
+	<div id="signature-display">No signature file set.</div>
       </section>
     </div>
-    <div id="main"  style="display: none;">
+    <div id="main" style="display: none;">
       <section class="section pt-0">
 	<div class="is-flex is-justify-content-center">
 	  <div style="position:relative">

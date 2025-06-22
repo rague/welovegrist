@@ -698,9 +698,9 @@ class GristGridWidget {
             const selectedItems = this.elements.gridTable.querySelectorAll(`[data-record-id="${this.selectedRecordId}"]`);
             selectedItems.forEach(item => {
                 item.classList.add('selected');
-                // Override with selection color
-                item.style.backgroundColor = '#d4edda';
-                item.style.color = 'black';
+                // Override with selection color (use Grist theme variable)
+                item.style.backgroundColor = 'var(--grist-theme-selection-opaque-bg)';
+                item.style.color = 'var(--grist-theme-selection-opaque-fg)';
             });
         }
     }

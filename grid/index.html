@@ -9,43 +9,24 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f8f9fa;
+            background-color: var(--grist-theme-bg);
+            color: var(--grist-theme-text);
             font-size: 14px;
             height: 100vh;
             overflow: hidden;
         }
 
         .widget-container {
-            background: white;
+            background: var(--grist-theme-bg);
             height: 100vh;
             display: flex;
             flex-direction: column;
             overflow: hidden;
         }
 
-        /* Configuration Panel */
-        .config-panel {
-            padding: 16px;
-            border-bottom: 1px solid #e9ecef;
-            background-color: #f8f9fa;
-        }
-
-        .config-row {
-            display: block;
-            margin-bottom: 12px;
-        }
-
-        .config-row:last-child {
-            margin-bottom: 0;
-        }
-
-        .config-label {
-            font-weight: 600;
-            color: #495057;
-        }
-
         code {
-            background-color: #f8f9fa;
+            background-color: var(--grist-theme-table-header-bg);
+            color: var(--grist-theme-text);
             padding: 2px 4px;
             border-radius: 3px;
             font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
@@ -57,6 +38,7 @@
             flex: 1;
             overflow: auto;
             padding: 16px;
+            background-color: var(--grist-theme-bg);
         }
 
         .grid-table {
@@ -67,7 +49,7 @@
 
         .grid-table th,
         .grid-table td {
-            border: 1px solid #dee2e6;
+            border: 1px solid var(--grist-theme-table-body-border);
             padding: 0;
             text-align: left;
             vertical-align: top;
@@ -76,9 +58,9 @@
         }
 
         .grid-table th {
-            background-color: #e9ecef;
+            background-color: var(--grist-theme-table-header-bg);
             font-weight: 600;
-            color: #495057;
+            color: var(--grist-theme-table-header-fg);
             position: sticky;
             top: 0;
             z-index: 10;
@@ -87,25 +69,27 @@
         }
 
         .grid-table thead th:first-child {
-            background-color: white;
-            border: 1px solid #dee2e6;
+            background-color: var(--grist-theme-bg);
+            border: 1px solid var(--grist-theme-table-body-border);
         }
 
         .grid-table tbody th {
             text-align: center;
+            background-color: var(--grist-theme-table-header-bg);
+            color: var(--grist-theme-table-header-fg);
         }
 
         .grid-table tbody tr:hover {
-            background-color: #f8f9fa;
+            background-color: var(--grist-theme-selection-opaque-bg);
         }
 
         .grid-cell {
-            background-color: white;
+            background-color: var(--grist-theme-cell-bg);
             position: relative;
         }
 
         .grid-cell.has-content {
-            background-color: #fff3cd;
+            background-color: var(--grist-theme-cell-bg);
         }
 
         .cell-content {
@@ -127,6 +111,7 @@
         .cell-content h4, .cell-content h5, .cell-content h6 {
             margin: 4px 0 2px 0;
             font-size: 1.1em;
+            color: var(--grist-theme-text);
         }
 
         .cell-content strong {
@@ -138,7 +123,8 @@
         }
 
         .cell-content code {
-            background-color: #f1f3f4;
+            background-color: var(--grist-theme-table-header-bg);
+            color: var(--grist-theme-text);
             padding: 1px 3px;
             border-radius: 2px;
             font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
@@ -146,8 +132,8 @@
         }
 
         .cell-content a {
-            color: #007bff;
-            text-decoration: none;
+            color: var(--grist-theme-text);
+            text-decoration: underline;
         }
 
         .cell-content a:hover {
@@ -165,11 +151,12 @@
 
         .cell-item {
             padding: 2px;
-            border-bottom: 1px dotted #ccc;
+            border-bottom: 1px dotted var(--grist-theme-table-body-border);
             transition: outline 0.2s ease;
             outline: 1px dotted transparent;
             display: block;
             width: 100%;
+            color: var(--grist-theme-text);
         }
 
         .cell-item:last-child {
@@ -178,32 +165,21 @@
 
         .cell-item:hover,
         .cell-item.hover-default {
-            outline: 2px dotted #999;
+            outline: 2px dotted var(--grist-theme-text-light);
             outline-offset: -1px;
         }
 
         .cell-item.selected {
-            background-color: #d4edda;
+            background-color: var(--grist-theme-selection-opaque-bg);
+            color: var(--grist-theme-selection-opaque-fg);
             border-radius: 3px;
-        }
-
-        .cell-count {
-            position: absolute;
-            top: 2px;
-            right: 4px;
-            background: #007bff;
-            color: white;
-            border-radius: 10px;
-            padding: 2px 6px;
-            font-size: 10px;
-            font-weight: bold;
         }
 
         /* Empty state */
         .empty-state {
             text-align: center;
             padding: 40px 20px;
-            color: #6c757d;
+            color: var(--grist-theme-text-light);
         }
 
         .empty-state-icon {
@@ -226,12 +202,12 @@
         .loading {
             text-align: center;
             padding: 40px;
-            color: #6c757d;
+            color: var(--grist-theme-text-light);
         }
 
         .loading-spinner {
-            border: 2px solid #f3f3f3;
-            border-top: 2px solid #007bff;
+            border: 2px solid var(--grist-theme-table-body-border);
+            border-top: 2px solid var(--grist-theme-cursor);
             border-radius: 50%;
             width: 32px;
             height: 32px;
@@ -246,20 +222,6 @@
 
         /* Responsive design */
         @media (max-width: 768px) {
-            .config-panel {
-                padding: 12px;
-            }
-            
-            .config-row {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 6px;
-            }
-            
-            .config-label {
-                min-width: auto;
-            }
-            
             .grid-container {
                 padding: 12px;
             }

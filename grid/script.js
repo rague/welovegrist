@@ -413,14 +413,6 @@ class GristGridWidget {
                     });
                     
                     cell.appendChild(contentDiv);
-                    
-                    // Add count badge if multiple items
-                    if (cellItems.length > 1) {
-                        const countBadge = document.createElement('span');
-                        countBadge.className = 'cell-count';
-                        countBadge.textContent = cellItems.length;
-                        cell.appendChild(countBadge);
-                    }
                 }
                 
                 row.appendChild(cell);

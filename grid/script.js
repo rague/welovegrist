@@ -26,7 +26,24 @@ class GristGridWidget {
      * Initialize the widget
      */
     init() {
+        this.setupMarkdown();
         this.initializeGrist();
+    }
+    
+    /**
+     * Setup Markdown configuration
+     */
+    setupMarkdown() {
+        if (typeof marked !== 'undefined') {
+            // Configure marked for safe rendering
+            marked.setOptions({
+                breaks: true,
+                gfm: true,
+                sanitize: false, // We'll handle XSS protection manually
+                smartLists: true,
+                smartypants: false
+            });
+        }
     }
     
     /**
@@ -393,7 +410,8 @@ class GristGridWidget {
                             itemDiv.style.color = '#adb5bd';
                             itemDiv.style.fontStyle = 'italic';
                         } else {
-                            itemDiv.textContent = item.content;
+                            // Render content as Markdown if it's a string
+                            this.renderContent(itemDiv, item.content);
                         }
                         
                         // Add hover handlers to remove default hover when hovering specific items
@@ -454,6 +472,73 @@ class GristGridWidget {
         });
         
         return alignments;
+    }
+    
+    /**
+     * Render content as Markdown if it's a string, otherwise as plain text
+     */
+    renderContent(element, content) {
+        const contentStr = String(content);
+        
+        // Check if marked library is available and content looks like it might contain Markdown
+        if (typeof marked !== 'undefined' && this.looksLikeMarkdown(contentStr)) {
+            try {
+                // Parse and render as Markdown
+                const htmlContent = marked.parse(contentStr);
+                element.innerHTML = this.sanitizeHtml(htmlContent);
+            } catch (error) {
+                console.warn('Error parsing Markdown:', error);
+                // Fallback to plain text
+                element.textContent = contentStr;
+            }
+        } else {
+            // Render as plain text
+            element.textContent = contentStr;
+        }
+    }
+    
+    /**
+     * Check if content looks like it might contain Markdown
+     */
+    looksLikeMarkdown(content) {
+        // Simple heuristics to detect potential Markdown content
+        const markdownIndicators = [
+            /\*\*.*\*\*/, // Bold
+            /\*.*\*/, // Italic
+            /^#{1,6}\s/, // Headers
+            /^\s*[-*+]\s/, // Lists
+            /^\s*\d+\.\s/, // Numbered lists
+            /`.*`/, // Inline code
+            /\[.*\]\(.*\)/, // Links
+            /^>\s/, // Blockquotes
+        ];
+        
+        return markdownIndicators.some(pattern => pattern.test(content));
+    }
+    
+    /**
+     * Basic HTML sanitization to prevent XSS
+     */
+    sanitizeHtml(html) {
+        // Create a temporary div to parse HTML
+        const temp = document.createElement('div');
+        temp.innerHTML = html;
+        
+        // Remove script tags and event handlers
+        const scripts = temp.querySelectorAll('script');
+        scripts.forEach(script => script.remove());
+        
+        // Remove dangerous attributes
+        const allElements = temp.querySelectorAll('*');
+        allElements.forEach(el => {
+            Array.from(el.attributes).forEach(attr => {
+                if (attr.name.startsWith('on') || attr.name === 'javascript:') {
+                    el.removeAttribute(attr.name);
+                }
+            });
+        });
+        
+        return temp.innerHTML;
     }
     
     /**

@@ -115,6 +115,54 @@
             min-height: 20px;
         }
 
+        .cell-content p {
+            margin: 0 0 4px 0;
+        }
+
+        .cell-content p:last-child {
+            margin-bottom: 0;
+        }
+
+        .cell-content h1, .cell-content h2, .cell-content h3, 
+        .cell-content h4, .cell-content h5, .cell-content h6 {
+            margin: 4px 0 2px 0;
+            font-size: 1.1em;
+        }
+
+        .cell-content strong {
+            font-weight: 600;
+        }
+
+        .cell-content em {
+            font-style: italic;
+        }
+
+        .cell-content code {
+            background-color: #f1f3f4;
+            padding: 1px 3px;
+            border-radius: 2px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.9em;
+        }
+
+        .cell-content a {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .cell-content a:hover {
+            text-decoration: underline;
+        }
+
+        .cell-content ul, .cell-content ol {
+            margin: 2px 0;
+            padding-left: 16px;
+        }
+
+        .cell-content li {
+            margin: 1px 0;
+        }
+
         .cell-item {
             padding: 2px;
             border-bottom: 1px dotted #ccc;
@@ -137,6 +185,18 @@
         .cell-item.selected {
             background-color: #d4edda;
             border-radius: 3px;
+        }
+
+        .cell-count {
+            position: absolute;
+            top: 2px;
+            right: 4px;
+            background: #007bff;
+            color: white;
+            border-radius: 10px;
+            padding: 2px 6px;
+            font-size: 10px;
+            font-weight: bold;
         }
 
         /* Empty state */
@@ -237,6 +297,8 @@
 
     <!-- Grist Plugin API -->
     <script src="https://docs.getgrist.com/grist-plugin-api.js"></script>
+    <!-- Marked library for Markdown parsing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

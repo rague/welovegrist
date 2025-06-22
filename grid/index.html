@@ -111,11 +111,8 @@
         .cell-content {
             font-size: 13px;
             line-height: 1.4;
-        }
-
-        .cell-content:hover .cell-item:last-child {
-            outline: 2px dotted #999;
-            outline-offset: -1px;
+            padding: 4px;
+            min-height: 20px;
         }
 
         .cell-item {
@@ -123,19 +120,18 @@
             border-bottom: 1px dotted #ccc;
             transition: outline 0.2s ease;
             outline: 1px dotted transparent;
+            display: inline-block;
+            max-width: calc(100% - 4px);
         }
 
         .cell-item:last-child {
             border-bottom: none;
         }
 
-        .cell-item:hover {
+        .cell-item:hover,
+        .cell-item.hover-default {
             outline: 2px dotted #999;
             outline-offset: -1px;
-        }
-
-        .cell-item:hover ~ .cell-item:last-child {
-            outline: 1px dotted transparent;
         }
 
         .cell-item.selected {
@@ -232,7 +228,7 @@
 <body>
     <div class="widget-container">
         <!-- Configuration Panel (only shown when mappings are missing) -->
-        <div class="config-panel" id="configPanel" style="display: none;">
+        <div class="config-panel" id="configPanel">
             <div class="config-row">
                 <span class="config-label">Column Mapping:</span>
                 <span style="color: #6c757d; font-size: 13px;">Configure the column mappings in the widget settings panel</span>

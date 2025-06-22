@@ -27,6 +27,8 @@ class GristGridWidget {
      * Initialize the widget
      */
     init() {
+        // Show config panel by default until mappings are confirmed
+        this.showConfigPanel(true);
         this.initializeGrist();
     }
     
@@ -351,9 +353,37 @@ class GristGridWidget {
                 if (cellItems.length > 0) {
                     cell.classList.add('has-content');
                     
-                    // Add content
+                    // Add content container
                     const contentDiv = document.createElement('div');
                     contentDiv.className = 'cell-content';
+                    
+                    // Add hover handlers for default selection
+                    contentDiv.addEventListener('mouseenter', () => {
+                        // Add default hover to last item
+                        const lastItem = contentDiv.querySelector('.cell-item:last-child');
+                        if (lastItem) {
+                            lastItem.classList.add('hover-default');
+                        }
+                    });
+                    
+                    contentDiv.addEventListener('mouseleave', () => {
+                        // Remove default hover from all items
+                        const items = contentDiv.querySelectorAll('.cell-item');
+                        items.forEach(item => item.classList.remove('hover-default'));
+                    });
+                    
+                    // Add click handler to content div for default selection (last item)
+                    contentDiv.addEventListener('click', (e) => {
+                        // Only handle clicks that are directly on the content div (empty space)
+                        if (e.target === contentDiv) {
+                            e.stopPropagation();
+                            // Select the last item by default when clicking on empty space
+                            const lastItem = cellItems[cellItems.length - 1];
+                            if (lastItem) {
+                                this.selectRecord(lastItem.recordId);
+                            }
+                        }
+                    });
                     
                     cellItems.forEach((item, index) => {
                         const itemDiv = document.createElement('div');
@@ -374,6 +404,13 @@ class GristGridWidget {
                         } else {
                             itemDiv.textContent = item.content;
                         }
+                        
+                        // Add hover handlers to remove default hover when hovering specific items
+                        itemDiv.addEventListener('mouseenter', () => {
+                            // Remove default hover from all items in this content
+                            const items = contentDiv.querySelectorAll('.cell-item');
+                            items.forEach(item => item.classList.remove('hover-default'));
+                        });
                         
                         // Add click handler for linking functionality
                         itemDiv.addEventListener('click', (e) => {

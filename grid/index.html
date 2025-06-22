@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grist Grid Widget</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+            font-size: 14px;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .widget-container {
+            background: white;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Configuration Panel */
+        .config-panel {
+            padding: 16px;
+            border-bottom: 1px solid #e9ecef;
+            background-color: #f8f9fa;
+        }
+
+        .config-row {
+            display: block;
+            margin-bottom: 12px;
+        }
+
+        .config-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .config-label {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        code {
+            background-color: #f8f9fa;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 12px;
+        }
+
+        /* Grid Container */
+        .grid-container {
+            flex: 1;
+            overflow: auto;
+            padding: 16px;
+        }
+
+        .grid-table {
+            border-collapse: collapse;
+            width: 100%;
+            min-width: 600px;
+        }
+
+        .grid-table th,
+        .grid-table td {
+            border: 1px solid #dee2e6;
+            padding: 0;
+            text-align: left;
+            vertical-align: top;
+            min-width: 100px;
+            max-width: 200px;
+        }
+
+        .grid-table th {
+            background-color: #e9ecef;
+            font-weight: 600;
+            color: #495057;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            text-align: center;
+            padding: 8px;
+        }
+
+        .grid-table thead th:first-child {
+            background-color: white;
+            border: 1px solid #dee2e6;
+        }
+
+        .grid-table tbody th {
+            text-align: center;
+        }
+
+        .grid-table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .grid-cell {
+            background-color: white;
+            position: relative;
+        }
+
+        .grid-cell.has-content {
+            background-color: #fff3cd;
+        }
+
+        .cell-content {
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .cell-content:hover .cell-item:last-child {
+            outline: 2px dotted #999;
+            outline-offset: -1px;
+        }
+
+        .cell-item {
+            padding: 2px;
+            border-bottom: 1px dotted #ccc;
+            transition: outline 0.2s ease;
+            outline: 1px dotted transparent;
+        }
+
+        .cell-item:last-child {
+            border-bottom: none;
+        }
+
+        .cell-item:hover {
+            outline: 2px dotted #999;
+            outline-offset: -1px;
+        }
+
+        .cell-item:hover ~ .cell-item:last-child {
+            outline: 1px dotted transparent;
+        }
+
+        .cell-item.selected {
+            background-color: #d4edda;
+            border-radius: 3px;
+        }
+
+        .cell-count {
+            position: absolute;
+            top: 2px;
+            right: 4px;
+            background: #007bff;
+            color: white;
+            border-radius: 10px;
+            padding: 2px 6px;
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #6c757d;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-state-message {
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        .empty-state-hint {
+            font-size: 14px;
+            opacity: 0.7;
+        }
+
+        /* Loading state */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+
+        .loading-spinner {
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #007bff;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .config-panel {
+                padding: 12px;
+            }
+            
+            .config-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 6px;
+            }
+            
+            .config-label {
+                min-width: auto;
+            }
+            
+            .grid-container {
+                padding: 12px;
+            }
+            
+            .grid-table th,
+            .grid-table td {
+                padding: 8px 6px;
+                min-width: 80px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="widget-container">
+        <!-- Configuration Panel (only shown when mappings are missing) -->
+        <div class="config-panel" id="configPanel" style="display: none;">
+            <div class="config-row">
+                <span class="config-label">Column Mapping:</span>
+                <span style="color: #6c757d; font-size: 13px;">Configure the column mappings in the widget settings panel</span>
+            </div>
+            <div class="config-row">
+                <div style="font-size: 13px; color: #495057;">
+                    <strong>Required columns:</strong><br>
+                    • <code>Row</code> - determines grid rows<br>
+                    • <code>Column</code> - determines grid columns<br>
+                    • <code>Content</code> - cell content to display<br><br>
+                    <strong>Optional columns:</strong><br>
+                    • <code>RowOrder</code> - custom order for rows (numeric)<br>
+                    • <code>ColumnOrder</code> - custom order for columns (numeric)
+                </div>
+            </div>
+        </div>
+
+        <!-- Grid Display -->
+        <div class="grid-container">
+            <div id="loadingState" class="loading">
+                <div class="loading-spinner"></div>
+                <div>Loading data...</div>
+            </div>
+            
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <div class="empty-state-icon">📊</div>
+                <div class="empty-state-message">No data to display</div>
+                <div class="empty-state-hint">Configure the column mappings above to see your data in grid format</div>
+            </div>
+            
+            <table id="gridTable" class="grid-table" style="display: none;">
+                <thead id="gridHeader"></thead>
+                <tbody id="gridBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Grist Plugin API -->
+    <script src="https://docs.getgrist.com/grist-plugin-api.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

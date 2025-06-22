@@ -86,6 +86,12 @@ class GristGridWidget {
                     description: 'Optional: numeric column to control horizontal axis ordering', 
                     optional: true,
                     type: 'Numeric'
+                },
+                {
+                    name: 'BackgroundColor',
+                    title: 'Background Color',
+                    description: 'Optional: column that provides background color for items (hex, rgb, or color names)',
+                    optional: true
                 }
             ]
         });
@@ -197,6 +203,7 @@ class GristGridWidget {
             const rowValue = this.getFieldValue(mapped.VerticalAxis);
             const colValue = this.getFieldValue(mapped.HorizontalAxis);
             const content = this.getFieldValue(mapped.Content);
+            const backgroundColor = mapped.BackgroundColor ? this.getFieldValue(mapped.BackgroundColor) : null;
             
             // Skip records with missing row or column values (but allow empty content)
             if (rowValue == null || colValue == null || rowValue === '' || colValue === '') {
@@ -245,7 +252,8 @@ class GristGridWidget {
             // Store content with record ID for linking functionality
             cellData.get(cellKey).push({
                 content: content || '',
-                recordId: record.id
+                recordId: record.id,
+                backgroundColor: backgroundColor
             });
         });
         
@@ -308,6 +316,9 @@ class GristGridWidget {
      */
     renderGrid(gridData) {
         const { rows, columns, cellData } = gridData;
+        
+        // Store cellData for later use in updateSelection
+        this.cellDataCache = cellData;
         
         // Analyze column data types for alignment
         const columnAlignments = this.analyzeColumnAlignments(columns, cellData);
@@ -402,6 +413,23 @@ class GristGridWidget {
                         // Apply selection styling if this is the selected record
                         if (this.selectedRecordId === item.recordId) {
                             itemDiv.classList.add('selected');
+                            // Selection color overrides background color
+                            itemDiv.style.backgroundColor = '#d4edda';
+                            itemDiv.style.color = 'black';
+                        } else {
+                            // Apply background color if provided (only when not selected)
+                            if (item.backgroundColor) {
+                                const sanitizedColor = this.sanitizeColor(item.backgroundColor);
+                                if (sanitizedColor) {
+                                    itemDiv.style.backgroundColor = sanitizedColor;
+                                    // Adjust text color for better contrast if needed
+                                    if (this.isColorDark(sanitizedColor)) {
+                                        itemDiv.style.color = 'white';
+                                    } else {
+                                        itemDiv.style.color = 'black';
+                                    }
+                                }
+                            }
                         }
                         
                         // Display content, showing placeholder for empty content
@@ -542,6 +570,81 @@ class GristGridWidget {
     }
     
     /**
+     * Sanitize and validate color values
+     */
+    sanitizeColor(color) {
+        if (!color || typeof color !== 'string') return null;
+        
+        const colorStr = color.trim().toLowerCase();
+        
+        // Check for hex colors
+        if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(colorStr)) {
+            return colorStr;
+        }
+        
+        // Check for rgb/rgba colors
+        if (/^rgb\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})\)$/i.test(colorStr) ||
+            /^rgba\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3}),\s*(0?\.?\d+)\)$/i.test(colorStr)) {
+            return colorStr;
+        }
+        
+        // Check for named colors (basic set)
+        const namedColors = [
+            'red', 'blue', 'green', 'yellow', 'orange', 'purple', 'pink', 'brown',
+            'black', 'white', 'gray', 'grey', 'cyan', 'magenta', 'lime', 'navy',
+            'maroon', 'olive', 'teal', 'silver', 'gold', 'indigo', 'violet',
+            'lightblue', 'lightgreen', 'lightgray', 'lightgrey', 'darkblue',
+            'darkgreen', 'darkred', 'darkgray', 'darkgrey'
+        ];
+        
+        if (namedColors.includes(colorStr)) {
+            return colorStr;
+        }
+        
+        return null; // Invalid color
+    }
+    
+    /**
+     * Determine if a color is dark (for contrast adjustment)
+     */
+    isColorDark(color) {
+        // Convert color to RGB values for luminance calculation
+        let r, g, b;
+        
+        if (color.startsWith('#')) {
+            // Hex color
+            const hex = color.slice(1);
+            if (hex.length === 3) {
+                r = parseInt(hex[0] + hex[0], 16);
+                g = parseInt(hex[1] + hex[1], 16);
+                b = parseInt(hex[2] + hex[2], 16);
+            } else {
+                r = parseInt(hex.slice(0, 2), 16);
+                g = parseInt(hex.slice(2, 4), 16);
+                b = parseInt(hex.slice(4, 6), 16);
+            }
+        } else if (color.startsWith('rgb')) {
+            // RGB color
+            const matches = color.match(/\d+/g);
+            if (matches && matches.length >= 3) {
+                r = parseInt(matches[0]);
+                g = parseInt(matches[1]);
+                b = parseInt(matches[2]);
+            } else {
+                return false; // Default to light if can't parse
+            }
+        } else {
+            // Named colors - approximate luminance
+            const darkColors = ['black', 'navy', 'maroon', 'darkblue', 'darkgreen', 'darkred', 'darkgray', 'darkgrey'];
+            return darkColors.includes(color.toLowerCase());
+        }
+        
+        // Calculate relative luminance
+        const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+        return luminance < 0.5;
+    }
+    
+    /**
      * Select a record in Grist (linking functionality)
      */
     selectRecord(recordId) {
@@ -563,10 +666,31 @@ class GristGridWidget {
      * Update visual selection in the grid
      */
     updateSelection() {
-        // Remove selection from all items
+        // Remove selection from all items and restore their original colors
         const allItems = this.elements.gridTable.querySelectorAll('.cell-item');
         allItems.forEach(item => {
             item.classList.remove('selected');
+            
+            // Reset styles to allow background color to show
+            item.style.backgroundColor = '';
+            item.style.color = '';
+            
+            // Reapply background color if the item has one
+            const recordId = item.dataset.recordId;
+            if (recordId) {
+                const itemData = this.findItemByRecordId(recordId);
+                if (itemData && itemData.backgroundColor) {
+                    const sanitizedColor = this.sanitizeColor(itemData.backgroundColor);
+                    if (sanitizedColor) {
+                        item.style.backgroundColor = sanitizedColor;
+                        if (this.isColorDark(sanitizedColor)) {
+                            item.style.color = 'white';
+                        } else {
+                            item.style.color = 'black';
+                        }
+                    }
+                }
+            }
         });
         
         // Add selection to the selected record
@@ -574,8 +698,22 @@ class GristGridWidget {
             const selectedItems = this.elements.gridTable.querySelectorAll(`[data-record-id="${this.selectedRecordId}"]`);
             selectedItems.forEach(item => {
                 item.classList.add('selected');
+                // Override with selection color
+                item.style.backgroundColor = '#d4edda';
+                item.style.color = 'black';
             });
         }
+    }
+    
+    /**
+     * Find item data by record ID (helper for updateSelection)
+     */
+    findItemByRecordId(recordId) {
+        for (const cellItems of this.cellDataCache.values()) {
+            const item = cellItems.find(item => item.recordId.toString() === recordId);
+            if (item) return item;
+        }
+        return null;
     }
 }
 

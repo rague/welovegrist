@@ -292,6 +292,9 @@ class GristGridWidget {
     renderGrid(gridData) {
         const { rows, columns, cellData } = gridData;
         
+        // Analyze column data types for alignment
+        const columnAlignments = this.analyzeColumnAlignments(columns, cellData);
+        
         // Build header
         this.elements.gridHeader.innerHTML = '';
         const headerRow = document.createElement('tr');
@@ -302,9 +305,13 @@ class GristGridWidget {
         headerRow.appendChild(emptyHeader);
         
         // Column headers
-        columns.forEach(colValue => {
+        columns.forEach((colValue, index) => {
             const th = document.createElement('th');
             th.textContent = colValue;
+            // Apply alignment to header based on content
+            if (columnAlignments[index] === 'right') {
+                th.style.textAlign = 'right';
+            }
             headerRow.appendChild(th);
         });
         
@@ -322,9 +329,14 @@ class GristGridWidget {
             row.appendChild(rowHeader);
             
             // Data cells
-            columns.forEach(colValue => {
+            columns.forEach((colValue, colIndex) => {
                 const cell = document.createElement('td');
                 cell.className = 'grid-cell';
+                
+                // Apply column alignment
+                if (columnAlignments[colIndex] === 'right') {
+                    cell.style.textAlign = 'right';
+                }
                 
                 const cellKey = `${rowValue}|${colValue}`;
                 const cellItems = cellData.get(cellKey) || [];
@@ -416,6 +428,40 @@ class GristGridWidget {
             
             this.elements.gridBody.appendChild(row);
         });
+    }
+    
+    /**
+     * Analyze column data types to determine alignment
+     */
+    analyzeColumnAlignments(columns, cellData) {
+        const alignments = {};
+        
+        columns.forEach((colValue, colIndex) => {
+            let numericCount = 0;
+            let totalCount = 0;
+            
+            // Check all cells in this column
+            cellData.forEach((cellItems, cellKey) => {
+                const [rowValue, currentColValue] = cellKey.split('|');
+                if (currentColValue === colValue) {
+                    cellItems.forEach(item => {
+                        if (item.content && item.content !== '') {
+                            totalCount++;
+                            // Check if content is numeric
+                            const content = String(item.content).trim();
+                            if (!isNaN(content) && !isNaN(parseFloat(content)) && content !== '') {
+                                numericCount++;
+                            }
+                        }
+                    });
+                }
+            });
+            
+            // If all non-empty content is numeric, align right
+            alignments[colIndex] = (totalCount > 0 && numericCount === totalCount) ? 'right' : 'left';
+        });
+        
+        return alignments;
     }
     
     /**

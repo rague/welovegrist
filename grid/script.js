@@ -12,7 +12,6 @@ class GristGridWidget {
         
         // DOM elements
         this.elements = {
-            configPanel: document.getElementById('configPanel'),
             loadingState: document.getElementById('loadingState'),
             emptyState: document.getElementById('emptyState'),
             gridTable: document.getElementById('gridTable'),
@@ -27,8 +26,6 @@ class GristGridWidget {
      * Initialize the widget
      */
     init() {
-        // Show config panel by default until mappings are confirmed
-        this.showConfigPanel(true);
         this.initializeGrist();
     }
     
@@ -109,38 +106,20 @@ class GristGridWidget {
         // Hide loading state
         this.elements.loadingState.style.display = 'none';
         
-        // Check if we have column mappings
-        if (!this.mappings) {
-            this.showConfigPanel(true);
-            this.showEmptyState('Waiting for column mappings...');
+        // Check if we have column mappings and required mappings
+        if (!this.mappings || this.records.length === 0) {
+            this.showEmptyState('No data available or mappings not configured.');
             return;
         }
         
         // Get mapped column names using Grist's mapping utility
         const mapped = grist.mapColumnNames(this.records[0] || {});
         if (!mapped || !this.hasRequiredMappings(mapped)) {
-            this.showConfigPanel(true);
-            this.showEmptyState('Please configure the column mappings in the widget settings panel.');
-            return;
-        }
-        
-        // Hide config panel when mappings are complete
-        this.showConfigPanel(false);
-        
-        // Check if we have data
-        if (this.records.length === 0) {
-            this.showEmptyState('No data available in the selected table.');
+            this.showEmptyState('Column mappings are being configured...');
             return;
         }
         
         this.buildGrid();
-    }
-    
-    /**
-     * Show or hide the configuration panel
-     */
-    showConfigPanel(show) {
-        this.elements.configPanel.style.display = show ? 'block' : 'none';
     }
     
     /**

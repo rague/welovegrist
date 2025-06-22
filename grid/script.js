@@ -39,34 +39,34 @@ class GristGridWidget {
             allowSelectBy: true,
             columns: [
                 {
-                    name: 'Row',
-                    title: 'Row Column',
-                    description: 'Column that determines the grid rows',
+                    name: 'VerticalAxis',
+                    title: 'Vertical Axis',
+                    description: 'Column that determines the vertical axis (rows) of the grid',
                     optional: false
                 },
                 {
-                    name: 'Column', 
-                    title: 'Column Column',
-                    description: 'Column that determines the grid columns',
+                    name: 'HorizontalAxis', 
+                    title: 'Horizontal Axis',
+                    description: 'Column that determines the horizontal axis (columns) of the grid',
                     optional: false
                 },
                 {
                     name: 'Content',
-                    title: 'Content Column', 
+                    title: 'Content', 
                     description: 'Column that provides the cell content',
                     optional: false
                 },
                 {
-                    name: 'RowOrder',
-                    title: 'Row Order Column',
-                    description: 'Optional: numeric column to control row ordering',
+                    name: 'VerticalOrder',
+                    title: 'Vertical Order',
+                    description: 'Optional: numeric column to control vertical axis ordering',
                     optional: true,
                     type: 'Numeric'
                 },
                 {
-                    name: 'ColumnOrder',
-                    title: 'Column Order Column',
-                    description: 'Optional: numeric column to control column ordering', 
+                    name: 'HorizontalOrder',
+                    title: 'Horizontal Order',
+                    description: 'Optional: numeric column to control horizontal axis ordering', 
                     optional: true,
                     type: 'Numeric'
                 }
@@ -126,8 +126,8 @@ class GristGridWidget {
      * Check if all required column mappings are available
      */
     hasRequiredMappings(mapped) {
-        return mapped.Row !== undefined && 
-               mapped.Column !== undefined && 
+        return mapped.VerticalAxis !== undefined && 
+               mapped.HorizontalAxis !== undefined && 
                mapped.Content !== undefined;
     }
     
@@ -177,8 +177,8 @@ class GristGridWidget {
                 return;
             }
             
-            const rowValue = this.getFieldValue(mapped.Row);
-            const colValue = this.getFieldValue(mapped.Column);
+            const rowValue = this.getFieldValue(mapped.VerticalAxis);
+            const colValue = this.getFieldValue(mapped.HorizontalAxis);
             const content = this.getFieldValue(mapped.Content);
             
             // Skip records with missing row or column values (but allow empty content)
@@ -187,8 +187,8 @@ class GristGridWidget {
             }
             
             // Get ordering values (optional)
-            const rowOrder = mapped.RowOrder != null ? Number(mapped.RowOrder) : null;
-            const colOrder = mapped.ColumnOrder != null ? Number(mapped.ColumnOrder) : null;
+            const rowOrder = mapped.VerticalOrder != null ? Number(mapped.VerticalOrder) : null;
+            const colOrder = mapped.HorizontalOrder != null ? Number(mapped.HorizontalOrder) : null;
             
             // Store row data with ordering
             if (!rowData.has(rowValue)) {

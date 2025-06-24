@@ -9,10 +9,11 @@
 
 ## 🧩 Widgets Disponibles
 
-| Widget | Description |
-|--------|-------------|
-| [✍️ Sign a PDF](#sign-a-pdf) | Signer des documents PDF dans Grist |
-| [🪟 Grid Display](#grid-display) | Affichage en grille bidimensionnelle |
+| Widget | Description | Démo |
+|--------|-------------|------|
+| [✍️ Sign a PDF](#sign-a-pdf) | Signer des documents PDF dans Grist | [🔗](https://ut7.getgrist.com/2g8wDt9wsPHA/exemple-de-signature-dun-document-SHARED/) |
+| [🪟 Grid Display](#grid-display) | Affichage en grille bidimensionnelle | [🔗](https://ut7.getgrist.com/mnN6xDU3ueUi/Grid-widget-demo-SHARED) |
+| [🐠 Mermaid Viewer](#mermaid-viewer) | Rendu de diagrammes Mermaid | [🔗](https://ut7.getgrist.com/w1KH9AFGU2TH/mermaid-widget-demo-SHARED) |
 
 ---
 
@@ -33,8 +34,6 @@ C'est pas sec du tout.
 1. Créez un widget personnalisé avec l'URL ci-dessus
 2. Uploadez votre signature (PNG)
 3. Cliquez sur un PDF pour le signer
-
-[Démo](https://ut7.getgrist.com/2g8wDt9wsPHA/exemple-de-signature-dun-document-SHARED/)
 
 Reste à faire :
 - améliorer l'ergonomie (notamment l'accès au panneau de configuration)
@@ -64,16 +63,43 @@ Affichez vos données sous forme de grille bidimensionnelle avec navigation.
 
 ---
 
+## 🐠 Mermaid Viewer
+
+URL : `https://ut7.github.io/welovegrist/mermaid-viewer/`
+
+Affichez des diagrammes Mermaid directement dans vos tables Grist.
+
+**Colonne requise :**
+- **Content** : Texte contenant des diagrammes Mermaid (délimiteurs ````mermaid`)
+
+**Fonctionnalités :**
+- ✅ **Diagrammes Mermaid** : Flowcharts, séquences, Gantt, ER, états, pie charts, etc.
+- ✅ **Thème adaptatif** : S'adapte automatiquement au dark/light mode de Grist
+- ✅ **Gestion d'erreurs** : Affiche le code source en cas d'erreur de syntaxe
+- ✅ Support Markdown (bonus)
+
+**Version :** Mermaid 10.6.1
+
+**Documentation :** [Syntaxe Mermaid officielle](https://mermaid.js.org/intro/syntax-reference.html)
+
+**Utilisation :**
+1. Créez un widget personnalisé avec l'URL ci-dessus
+2. Configurez la colonne "Content"
+3. Le contenu se met à jour automatiquement selon la sélection
+
+---
+
 # 🇬🇧 English
 
 > ⚠️ **Work in progress** - Widgets may evolve and change
 
 ### Available Widgets
 
-| Widget | Description |
-|--------|-------------|
-| [✍️ Sign a PDF](#sign-a-pdf-1) | Sign PDF documents within Grist |
-| [🪟 Grid Display](#grid-display-1) | Bidimensional grid display |
+| Widget | Description | Demo |
+|--------|-------------|------|
+| [✍️ Sign a PDF](#sign-a-pdf-1) | Sign PDF documents within Grist | [🔗](https://ut7.getgrist.com/2g8wDt9wsPHA/exemple-de-signature-dun-document-SHARED/) |
+| [🪟 Grid Display](#grid-display-1) | Bidimensional grid display | [🔗](https://ut7.getgrist.com/mnN6xDU3ueUi/Grid-widget-demo-SHARED) |
+| [🐠 Mermaid Viewer](#mermaid-viewer-1) | Render Mermaid diagrams | [🔗](https://ut7.getgrist.com/w1KH9AFGU2TH/mermaid-widget-demo-SHARED) |
 
 ---
 
@@ -94,8 +120,6 @@ It's not dry at all.
 1. Create custom widget with URL above
 2. Upload your signature (PNG)
 3. Click on PDF to sign it
-
-[Demo](https://ut7.getgrist.com/2g8wDt9wsPHA/exemple-de-signature-dun-document-SHARED/)
 
 TODO:
 - improve UX (especially configuration panel access)
@@ -122,6 +146,32 @@ Display your data as bidimensional grid with navigation.
 1. Create custom widget with URL above
 2. Configure columns
 3. Click on items to navigate
+
+---
+
+## 🐠 Mermaid Viewer
+
+URL: `https://ut7.github.io/welovegrist/mermaid-viewer/`
+
+Display Mermaid diagrams directly in your Grist tables.
+
+**Required column:**
+- **Content**: Text containing Mermaid diagrams (````mermaid` delimiters)
+
+**Features:**
+- ✅ **Mermaid diagrams**: Flowcharts, sequences, Gantt, ER, states, pie charts, etc.
+- ✅ **Adaptive theming**: Automatically adapts to Grist's dark/light mode
+- ✅ **Error handling**: Shows source code when syntax errors occur
+- ✅ Markdown support (bonus)
+
+**Version:** Mermaid 10.6.1
+
+**Documentation:** [Official Mermaid syntax](https://mermaid.js.org/intro/syntax-reference.html)
+
+**Usage:**
+1. Create custom widget with URL above
+2. Configure the "Content" column
+3. Content updates automatically based on selection
 
 ---
 

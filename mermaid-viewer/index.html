@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grist Markdown & Mermaid Widget</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--grist-theme-bg);
+            color: var(--grist-theme-text);
+            font-size: 14px;
+            line-height: 1.6;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .widget-container {
+            background: var(--grist-theme-bg);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Content Display */
+        .content-container {
+            flex: 1;
+            overflow: auto;
+            padding: 16px;
+            background-color: var(--grist-theme-bg);
+        }
+
+        .content-display {
+            max-width: 100%;
+            background: var(--grist-theme-widget-bg);
+            border: 1px solid var(--grist-theme-widget-border);
+            border-radius: 4px;
+            padding: 16px;
+        }
+
+        /* Markdown Styling */
+        .content-display h1,
+        .content-display h2,
+        .content-display h3,
+        .content-display h4,
+        .content-display h5,
+        .content-display h6 {
+            color: var(--grist-theme-text);
+            margin: 16px 0 8px 0;
+            font-weight: 600;
+        }
+
+        .content-display h1 { font-size: 1.8em; }
+        .content-display h2 { font-size: 1.5em; }
+        .content-display h3 { font-size: 1.3em; }
+        .content-display h4 { font-size: 1.1em; }
+        .content-display h5 { font-size: 1em; }
+        .content-display h6 { font-size: 0.9em; }
+
+        .content-display p {
+            margin: 8px 0;
+            color: var(--grist-theme-text);
+        }
+
+        .content-display ul,
+        .content-display ol {
+            margin: 8px 0;
+            padding-left: 24px;
+            color: var(--grist-theme-text);
+        }
+
+        .content-display li {
+            margin: 4px 0;
+        }
+
+        .content-display blockquote {
+            margin: 16px 0;
+            padding: 8px 16px;
+            border-left: 4px solid var(--grist-theme-selection);
+            background-color: var(--grist-theme-table-header-bg);
+            color: var(--grist-theme-text);
+            font-style: italic;
+        }
+
+        .content-display code {
+            background-color: var(--grist-theme-table-header-bg);
+            color: var(--grist-theme-text);
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.9em;
+        }
+
+        .content-display pre {
+            background-color: var(--grist-theme-table-header-bg);
+            color: var(--grist-theme-text);
+            padding: 12px;
+            border-radius: 4px;
+            overflow-x: auto;
+            margin: 16px 0;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+
+        .content-display pre code {
+            background: none;
+            padding: 0;
+            border-radius: 0;
+        }
+
+        .content-display a {
+            color: var(--grist-theme-cursor, #0066cc);
+            text-decoration: none;
+        }
+
+        .content-display a:hover {
+            color: var(--grist-theme-cursor, #004499);
+            text-decoration: underline;
+            opacity: 0.8;
+        }
+
+        .content-display table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 16px 0;
+        }
+
+        .content-display th,
+        .content-display td {
+            border: 1px solid var(--grist-theme-table-body-border);
+            padding: 8px 12px;
+            text-align: left;
+        }
+
+        .content-display th {
+            background-color: var(--grist-theme-table-header-bg);
+            color: var(--grist-theme-table-header-fg);
+            font-weight: 600;
+        }
+
+        .content-display td {
+            background-color: var(--grist-theme-cell-bg);
+            color: var(--grist-theme-cell-fg);
+        }
+
+        .content-display hr {
+            border: none;
+            border-top: 1px solid var(--grist-theme-table-body-border);
+            margin: 24px 0;
+        }
+
+        /* Mermaid Diagrams */
+        .mermaid-container {
+            margin: 16px 0;
+            text-align: center;
+            overflow-x: auto;
+        }
+
+        .mermaid {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .mermaid-error {
+            background-color: var(--grist-theme-table-header-bg);
+            color: var(--grist-theme-text);
+            padding: 12px;
+            border-radius: 4px;
+            border-left: 4px solid #dc3545;
+            margin: 16px 0;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.9em;
+        }
+
+        .mermaid-error strong {
+            color: #dc3545;
+            font-weight: 600;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .mermaid-error hr {
+            border: none;
+            border-top: 1px solid #dc3545;
+            margin: 8px 0;
+            opacity: 0.5;
+        }
+
+        .mermaid-error pre {
+            margin: 8px 0 0 0;
+            padding: 8px;
+            background-color: rgba(220, 53, 69, 0.1);
+            border-radius: 3px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            border: 1px solid rgba(220, 53, 69, 0.2);
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--grist-theme-text-light);
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-state-message {
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        .empty-state-hint {
+            font-size: 14px;
+            opacity: 0.7;
+        }
+
+        /* Loading state with dark mode support */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--grist-theme-text-light, #666);
+        }
+
+        .loading-spinner {
+            border: 2px solid var(--grist-theme-table-body-border, #e0e0e0);
+            border-top: 2px solid var(--grist-theme-selection, #007bff);
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        /* Dark mode detection fallback */
+        @media (prefers-color-scheme: dark) {
+            body:not([style*="--grist-theme"]) .loading {
+                color: #ccc;
+            }
+            
+            body:not([style*="--grist-theme"]) .loading-spinner {
+                border-color: #444;
+                border-top-color: #bb86fc;
+            }
+        }
+
+        /* Force dark mode styles when body has dark background */
+        body[style*="background"] .loading,
+        html[style*="background"] .loading {
+            color: #ccc;
+        }
+
+        body[style*="background"] .loading-spinner,
+        html[style*="background"] .loading-spinner {
+            border-color: #444;
+            border-top-color: #bb86fc;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .content-container {
+                padding: 12px;
+            }
+            
+            .content-display {
+                padding: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="widget-container">
+        <!-- Content Display -->
+        <div class="content-container">
+            <div id="loadingState" class="loading">
+                <div class="loading-spinner"></div>
+                <div>Loading content...</div>
+            </div>
+            
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <div class="empty-state-icon">📝</div>
+                <div class="empty-state-message">No content to display</div>
+                <div class="empty-state-hint">Configure the column mapping to see your Markdown and Mermaid content</div>
+            </div>
+            
+            <div id="contentDisplay" class="content-display" style="display: none;">
+                <!-- Rendered content will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- External Libraries -->
+    <script src="https://docs.getgrist.com/grist-plugin-api.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

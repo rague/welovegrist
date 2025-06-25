@@ -170,7 +170,7 @@
         }
 
         .cell-item {
-            padding: 2px;
+            padding: 8px 6px;
             border-bottom: 1px dotted var(--grist-theme-table-body-border);
             transition: outline 0.2s ease;
             outline: 1px dotted transparent;
@@ -179,6 +179,9 @@
             color: var(--grist-theme-text);
             cursor: pointer;
             border-radius: 3px;
+            box-sizing: border-box;
+            max-width: 100%;
+            overflow: hidden;
         }
 
         .cell-item:last-child {

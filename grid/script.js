@@ -9,6 +9,7 @@ class GristGridWidget {
         this.records = [];
         this.mappings = null;
         this.selectedRecordId = null;
+        this.focusedElement = null;
         
         // DOM elements
         this.elements = {
@@ -16,7 +17,9 @@ class GristGridWidget {
             emptyState: document.getElementById('emptyState'),
             gridTable: document.getElementById('gridTable'),
             gridHeader: document.getElementById('gridHeader'),
-            gridBody: document.getElementById('gridBody')
+            gridBody: document.getElementById('gridBody'),
+            gridCaption: document.getElementById('gridCaption'),
+            status: document.getElementById('status')
         };
         
         this.init();
@@ -27,7 +30,165 @@ class GristGridWidget {
      */
     init() {
         this.setupMarkdown();
+        this.setupKeyboardNavigation();
         this.initializeGrist();
+    }
+    
+    /**
+     * Setup keyboard navigation
+     */
+    setupKeyboardNavigation() {
+        // Global keyboard handler
+        document.addEventListener('keydown', (e) => {
+            this.handleKeyDown(e);
+        });
+        
+        // Focus management
+        document.addEventListener('focusin', (e) => {
+            if (e.target.classList.contains('cell-item')) {
+                this.focusedElement = e.target;
+            }
+        });
+        
+        document.addEventListener('focusout', (e) => {
+            if (e.target.classList.contains('cell-item')) {
+                // Small delay to check if focus moved to another cell-item
+                setTimeout(() => {
+                    if (!document.activeElement?.classList.contains('cell-item')) {
+                        this.focusedElement = null;
+                    }
+                }, 10);
+            }
+        });
+    }
+    
+    /**
+     * Handle keyboard navigation
+     */
+    handleKeyDown(e) {
+        const focusedItem = document.activeElement;
+        
+        // Only handle keyboard events when focused on cell items
+        if (!focusedItem?.classList.contains('cell-item')) {
+            return;
+        }
+        
+        switch (e.key) {
+            case 'Enter':
+            case ' ': // Space
+                e.preventDefault();
+                this.activateItem(focusedItem);
+                break;
+                
+            case 'ArrowRight':
+                e.preventDefault();
+                this.moveFocus('right', focusedItem);
+                break;
+                
+            case 'ArrowLeft':
+                e.preventDefault();
+                this.moveFocus('left', focusedItem);
+                break;
+                
+            case 'ArrowDown':
+                e.preventDefault();
+                this.moveFocus('down', focusedItem);
+                break;
+                
+            case 'ArrowUp':
+                e.preventDefault();
+                this.moveFocus('up', focusedItem);
+                break;
+                
+            case 'Home':
+                e.preventDefault();
+                this.moveFocus('home', focusedItem);
+                break;
+                
+            case 'End':
+                e.preventDefault();
+                this.moveFocus('end', focusedItem);
+                break;
+        }
+    }
+    
+    /**
+     * Activate a grid item (same as clicking)
+     */
+    activateItem(item) {
+        const recordId = parseInt(item.dataset.recordId);
+        if (recordId) {
+            this.selectRecord(recordId);
+        }
+    }
+    
+    /**
+     * Move focus to adjacent items
+     */
+    moveFocus(direction, currentItem) {
+        const allItems = Array.from(document.querySelectorAll('.cell-item'));
+        const currentIndex = allItems.indexOf(currentItem);
+        
+        if (currentIndex === -1) return;
+        
+        let newIndex;
+        
+        switch (direction) {
+            case 'right':
+                newIndex = Math.min(currentIndex + 1, allItems.length - 1);
+                break;
+            case 'left':
+                newIndex = Math.max(currentIndex - 1, 0);
+                break;
+            case 'down':
+                // Try to find item in next row, same column position
+                newIndex = this.findVerticalNeighbor(currentItem, allItems, 'down');
+                break;
+            case 'up':
+                // Try to find item in previous row, same column position
+                newIndex = this.findVerticalNeighbor(currentItem, allItems, 'up');
+                break;
+            case 'home':
+                newIndex = 0;
+                break;
+            case 'end':
+                newIndex = allItems.length - 1;
+                break;
+            default:
+                return;
+        }
+        
+        if (newIndex !== undefined && newIndex !== currentIndex && allItems[newIndex]) {
+            allItems[newIndex].focus();
+        }
+    }
+    
+    /**
+     * Find vertical neighbor based on table structure
+     */
+    findVerticalNeighbor(currentItem, allItems, direction) {
+        const currentCell = currentItem.closest('td');
+        if (!currentCell) return null;
+        
+        const currentRow = currentCell.closest('tr');
+        const cellIndex = Array.from(currentRow.cells).indexOf(currentCell);
+        
+        let targetRow;
+        if (direction === 'down') {
+            targetRow = currentRow.nextElementSibling;
+        } else {
+            targetRow = currentRow.previousElementSibling;
+        }
+        
+        if (targetRow && targetRow.cells[cellIndex]) {
+            const targetCell = targetRow.cells[cellIndex];
+            const targetItem = targetCell.querySelector('.cell-item');
+            if (targetItem) {
+                return allItems.indexOf(targetItem);
+            }
+        }
+        
+        return null;
     }
     
     /**
@@ -116,6 +277,15 @@ class GristGridWidget {
     }
     
     /**
+     * Announce to screen readers
+     */
+    announceToScreenReader(message) {
+        if (this.elements.status) {
+            this.elements.status.textContent = message;
+        }
+    }
+    
+    /**
      * Handle data updates from Grist
      */
     handleDataUpdate() {
@@ -166,6 +336,9 @@ class GristGridWidget {
         if (messageElement) {
             messageElement.textContent = message;
         }
+        
+        // Announce to screen readers
+        this.announceToScreenReader(message);
     }
     
     /**
@@ -178,8 +351,24 @@ class GristGridWidget {
         // Process data into grid structure
         const gridData = this.processDataForGrid();
         
+        // Update caption with current data info
+        this.updateCaption(gridData);
+        
         // Build grid HTML
         this.renderGrid(gridData);
+        
+        // Announce grid is ready
+        this.announceToScreenReader(`Grid loaded with ${gridData.rows.length} rows and ${gridData.columns.length} columns`);
+    }
+    
+    /**
+     * Update table caption with current data
+     */
+    updateCaption(gridData) {
+        if (this.elements.gridCaption) {
+            const totalItems = Array.from(gridData.cellData.values()).reduce((sum, items) => sum + items.length, 0);
+            this.elements.gridCaption.textContent = `Interactive data grid with ${gridData.rows.length} rows, ${gridData.columns.length} columns, and ${totalItems} total items. Use Tab to navigate, Enter or Space to select.`;
+        }
     }
     
     /**
@@ -330,12 +519,15 @@ class GristGridWidget {
         // Empty top-left cell
         const emptyHeader = document.createElement('th');
         emptyHeader.textContent = '';
+        emptyHeader.setAttribute('scope', 'col');
         headerRow.appendChild(emptyHeader);
         
         // Column headers
         columns.forEach((colValue, index) => {
             const th = document.createElement('th');
             th.textContent = colValue;
+            th.setAttribute('scope', 'col');
+            th.setAttribute('id', `col-header-${index}`);
             // Apply alignment to header based on content
             if (columnAlignments[index] === 'right') {
                 th.style.textAlign = 'right';
@@ -348,18 +540,21 @@ class GristGridWidget {
         // Build body
         this.elements.gridBody.innerHTML = '';
         
-        rows.forEach(rowValue => {
+        rows.forEach((rowValue, rowIndex) => {
             const row = document.createElement('tr');
             
             // Row header
             const rowHeader = document.createElement('th');
             rowHeader.textContent = rowValue;
+            rowHeader.setAttribute('scope', 'row');
+            rowHeader.setAttribute('id', `row-header-${rowIndex}`);
             row.appendChild(rowHeader);
             
             // Data cells
             columns.forEach((colValue, colIndex) => {
                 const cell = document.createElement('td');
                 cell.className = 'grid-cell';
+                cell.setAttribute('headers', `row-header-${rowIndex} col-header-${colIndex}`);
                 
                 // Apply column alignment
                 if (columnAlignments[colIndex] === 'right') {
@@ -371,10 +566,40 @@ class GristGridWidget {
                 
                 if (cellItems.length > 0) {
                     cell.classList.add('has-content');
-
+                    
                     // Add content container
                     const contentDiv = document.createElement('div');
                     contentDiv.className = 'cell-content';
+                    contentDiv.setAttribute('role', 'group');
+                    contentDiv.setAttribute('aria-label', `Cell content for ${rowValue}, ${colValue}`);
+                    
+                    // Add hover handlers for default selection
+                    contentDiv.addEventListener('mouseenter', () => {
+                        // Add default hover to last item
+                        const lastItem = contentDiv.querySelector('.cell-item:last-child');
+                        if (lastItem) {
+                            lastItem.classList.add('hover-default');
+                        }
+                    });
+                    
+                    contentDiv.addEventListener('mouseleave', () => {
+                        // Remove default hover from all items
+                        const items = contentDiv.querySelectorAll('.cell-item');
+                        items.forEach(item => item.classList.remove('hover-default'));
+                    });
+                    
+                    // Add click handler to content div for default selection (last item)
+                    contentDiv.addEventListener('click', (e) => {
+                        // Only handle clicks that are directly on the content div (empty space)
+                        if (e.target === contentDiv) {
+                            e.stopPropagation();
+                            // Select the last item by default when clicking on empty space
+                            const lastItem = cellItems[cellItems.length - 1];
+                            if (lastItem) {
+                                this.selectRecord(lastItem.recordId);
+                            }
+                        }
+                    });
                     
                     cellItems.forEach((item, index) => {
                         const itemDiv = document.createElement('div');
@@ -382,13 +607,24 @@ class GristGridWidget {
                         itemDiv.style.cursor = 'pointer';
                         itemDiv.dataset.recordId = item.recordId; // Store record ID for selection tracking
                         
-                        // Apply selection styling if this is the selected record
+                        // Accessibility attributes
+                        itemDiv.setAttribute('tabindex', '0');
+                        itemDiv.setAttribute('role', 'button');
+                        
+                        // Create descriptive label for screen readers
+                        const contentText = item.content || 'empty';
+                        const itemLabel = `${contentText}, row ${rowValue}, column ${colValue}. Press Enter or Space to select.`;
+                        itemDiv.setAttribute('aria-label', itemLabel);
+                        
+                        // If this is the selected record, mark it as pressed
                         if (this.selectedRecordId === item.recordId) {
+                            itemDiv.setAttribute('aria-pressed', 'true');
                             itemDiv.classList.add('selected');
                             // Selection color overrides background color
-                            itemDiv.style.backgroundColor = '#d4edda';
-                            itemDiv.style.color = 'black';
+                            itemDiv.style.backgroundColor = 'var(--grist-theme-selection-opaque-bg)';
+                            itemDiv.style.color = 'var(--grist-theme-selection-opaque-fg)';
                         } else {
+                            itemDiv.setAttribute('aria-pressed', 'false');
                             // Apply background color if provided (only when not selected)
                             if (item.backgroundColor) {
                                 const sanitizedColor = this.sanitizeColor(item.backgroundColor);
@@ -414,16 +650,39 @@ class GristGridWidget {
                             this.renderContent(itemDiv, item.content);
                         }
                         
+                        // Add hover handlers to remove default hover when hovering specific items
+                        itemDiv.addEventListener('mouseenter', () => {
+                            // Remove default hover from all items in this content
+                            const items = contentDiv.querySelectorAll('.cell-item');
+                            items.forEach(item => item.classList.remove('hover-default'));
+                        });
+                        
                         // Add click handler for linking functionality
                         itemDiv.addEventListener('click', (e) => {
                             e.stopPropagation();
                             this.selectRecord(item.recordId);
                         });
                         
+                        // Add keyboard handler for item activation
+                        itemDiv.addEventListener('keydown', (e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                this.selectRecord(item.recordId);
+                            }
+                        });
+                        
                         contentDiv.appendChild(itemDiv);
                     });
                     
                     cell.appendChild(contentDiv);
+                } else {
+                    // Empty cell - still make it focusable for screen readers
+                    const emptyDiv = document.createElement('div');
+                    emptyDiv.className = 'cell-content';
+                    emptyDiv.setAttribute('role', 'gridcell');
+                    emptyDiv.setAttribute('aria-label', `Empty cell at row ${rowValue}, column ${colValue}`);
+                    emptyDiv.textContent = '';
+                    cell.appendChild(emptyDiv);
                 }
                 
                 row.appendChild(cell);
@@ -620,10 +879,18 @@ class GristGridWidget {
             // Update visual selection in the grid
             this.updateSelection();
             
+            // Announce selection to screen readers
+            const itemData = this.findItemByRecordId(recordId.toString());
+            if (itemData) {
+                const content = itemData.content || 'empty item';
+                this.announceToScreenReader(`Selected: ${content}`);
+            }
+            
             // Set cursor position in Grist
             grist.setCursorPos({ rowId: recordId });
         } catch (error) {
             console.warn('Could not select record:', error);
+            this.announceToScreenReader('Selection failed');
         }
     }
     
@@ -635,6 +902,7 @@ class GristGridWidget {
         const allItems = this.elements.gridTable.querySelectorAll('.cell-item');
         allItems.forEach(item => {
             item.classList.remove('selected');
+            item.setAttribute('aria-pressed', 'false');
             
             // Reset styles to allow background color to show
             item.style.backgroundColor = '';
@@ -663,6 +931,7 @@ class GristGridWidget {
             const selectedItems = this.elements.gridTable.querySelectorAll(`[data-record-id="${this.selectedRecordId}"]`);
             selectedItems.forEach(item => {
                 item.classList.add('selected');
+                item.setAttribute('aria-pressed', 'true');
                 // Override with selection color (use Grist theme variable)
                 item.style.backgroundColor = 'var(--grist-theme-selection-opaque-bg)';
                 item.style.color = 'var(--grist-theme-selection-opaque-fg)';
@@ -674,6 +943,8 @@ class GristGridWidget {
      * Find item data by record ID (helper for updateSelection)
      */
     findItemByRecordId(recordId) {
+        if (!this.cellDataCache) return null;
+        
         for (const cellItems of this.cellDataCache.values()) {
             const item = cellItems.find(item => item.recordId.toString() === recordId);
             if (item) return item;

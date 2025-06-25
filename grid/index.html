@@ -5,6 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Grist Grid Widget</title>
     <style>
+        /* Screen reader only content */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             margin: 0;
@@ -45,6 +58,13 @@
             border-collapse: collapse;
             width: 100%;
             min-width: 600px;
+        }
+
+        .grid-table caption {
+            font-weight: 600;
+            margin-bottom: 8px;
+            text-align: left;
+            color: var(--grist-theme-text);
         }
 
         .grid-table th,
@@ -157,21 +177,48 @@
             display: block;
             width: 100%;
             color: var(--grist-theme-text);
+            cursor: pointer;
+            border-radius: 3px;
         }
 
         .cell-item:last-child {
             border-bottom: none;
         }
 
-        .cell-item:hover {
+        .cell-item:hover,
+        .cell-item.hover-default {
             outline: 2px dotted var(--grist-theme-text-light);
             outline-offset: -1px;
+        }
+
+        /* Focus styles for keyboard navigation */
+        .cell-item:focus {
+            outline: 2px solid var(--grist-theme-cursor);
+            outline-offset: -2px;
         }
 
         .cell-item.selected {
             background-color: var(--grist-theme-selection-opaque-bg);
             color: var(--grist-theme-selection-opaque-fg);
             border-radius: 3px;
+        }
+
+        /* Skip link for keyboard users */
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 6px;
+            background: var(--grist-theme-bg);
+            color: var(--grist-theme-text);
+            padding: 8px;
+            text-decoration: none;
+            border: 2px solid var(--grist-theme-cursor);
+            border-radius: 4px;
+            z-index: 1000;
+        }
+
+        .skip-link:focus {
+            top: 6px;
         }
 
         /* Empty state */
@@ -219,6 +266,26 @@
             100% { transform: rotate(360deg); }
         }
 
+        /* High contrast mode support */
+        @media (prefers-contrast: high) {
+            .cell-item:focus {
+                outline: 3px solid;
+                outline-offset: 2px;
+            }
+        }
+
+        /* Reduced motion support */
+        @media (prefers-reduced-motion: reduce) {
+            .cell-item {
+                transition: none;
+            }
+            
+            .loading-spinner {
+                animation: none;
+                border: 2px solid var(--grist-theme-cursor);
+            }
+        }
+
         /* Responsive design */
         @media (max-width: 768px) {
             .grid-container {
@@ -235,25 +302,40 @@
     </style>
 </head>
 <body>
+    <!-- Skip link for keyboard users -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    
+    <!-- Status region for screen reader announcements -->
+    <div id="status" aria-live="polite" aria-atomic="true" class="sr-only"></div>
+    
     <div class="widget-container">
         <!-- Grid Display -->
         <div class="grid-container">
-            <div id="loadingState" class="loading">
+            <div id="loadingState" class="loading" role="status" aria-label="Loading data">
                 <div class="loading-spinner"></div>
                 <div>Loading data...</div>
             </div>
             
-            <div id="emptyState" class="empty-state" style="display: none;">
-                <div class="empty-state-icon">📊</div>
+            <div id="emptyState" class="empty-state" style="display: none;" role="status">
+                <div class="empty-state-icon" aria-hidden="true">📊</div>
                 <div class="empty-state-message">No data to display</div>
                 <div class="empty-state-hint">Configure the column mappings above to see your data in grid format</div>
             </div>
             
-            <table id="gridTable" class="grid-table" style="display: none;">
-                <thead id="gridHeader"></thead>
-                <tbody id="gridBody"></tbody>
-            </table>
+            <main id="main-content">
+                <table id="gridTable" class="grid-table" style="display: none;" role="table">
+                    <caption id="gridCaption">Interactive data grid</caption>
+                    <thead id="gridHeader"></thead>
+                    <tbody id="gridBody"></tbody>
+                </table>
+            </main>
         </div>
+    </div>
+
+    <!-- Keyboard instructions for screen readers -->
+    <div class="sr-only" id="keyboard-instructions">
+        <h2>Keyboard Navigation Instructions</h2>
+        <p>Use Tab to navigate between grid items. Press Enter or Space to select an item and navigate to the corresponding record in Grist.</p>
     </div>
 
     <!-- Grist Plugin API -->

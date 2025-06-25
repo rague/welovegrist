@@ -116,9 +116,12 @@ class GristGridWidget {
      * Activate a grid item (same as clicking)
      */
     activateItem(item) {
-        const recordId = parseInt(item.dataset.recordId);
-        if (recordId) {
-            this.selectRecord(recordId);
+        // Only activate items that have a record ID (not empty items)
+        if (!item.classList.contains('empty-item')) {
+            const recordId = parseInt(item.dataset.recordId);
+            if (recordId) {
+                this.selectRecord(recordId);
+            }
         }
     }
     
@@ -676,13 +679,35 @@ class GristGridWidget {
                     
                     cell.appendChild(contentDiv);
                 } else {
-                    // Empty cell - still make it focusable for screen readers
-                    const emptyDiv = document.createElement('div');
-                    emptyDiv.className = 'cell-content';
-                    emptyDiv.setAttribute('role', 'gridcell');
-                    emptyDiv.setAttribute('aria-label', `Empty cell at row ${rowValue}, column ${colValue}`);
-                    emptyDiv.textContent = '';
-                    cell.appendChild(emptyDiv);
+                    // Empty cell - create same structure as filled cells
+                    const contentDiv = document.createElement('div');
+                    contentDiv.className = 'cell-content';
+                    contentDiv.setAttribute('role', 'group');
+                    contentDiv.setAttribute('aria-label', `Empty cell at row ${rowValue}, column ${colValue}`);
+                    
+                    // Add hover handlers (same logic as filled cells)
+                    contentDiv.addEventListener('mouseenter', () => {
+                        const lastItem = contentDiv.querySelector('.cell-item:last-child');
+                        if (lastItem) {
+                            lastItem.classList.add('hover-default');
+                        }
+                    });
+                    
+                    contentDiv.addEventListener('mouseleave', () => {
+                        const items = contentDiv.querySelectorAll('.cell-item');
+                        items.forEach(item => item.classList.remove('hover-default'));
+                    });
+                    
+                    // Create empty item for uniform structure
+                    const emptyItem = document.createElement('div');
+                    emptyItem.className = 'cell-item empty-item';
+                    emptyItem.setAttribute('role', 'gridcell');
+                    emptyItem.setAttribute('aria-label', `Empty cell at row ${rowValue}, column ${colValue}`);
+                    emptyItem.setAttribute('tabindex', '0');
+                    emptyItem.textContent = '';
+                    
+                    contentDiv.appendChild(emptyItem);
+                    cell.appendChild(contentDiv);
                 }
                 
                 row.appendChild(cell);

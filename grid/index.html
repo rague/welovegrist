@@ -170,7 +170,7 @@
         }
 
         .cell-item {
-            padding: 8px 6px;
+            padding: 6px 8px;
             border-bottom: 1px dotted var(--grist-theme-table-body-border);
             transition: outline 0.2s ease;
             outline: 1px dotted transparent;
@@ -179,9 +179,6 @@
             color: var(--grist-theme-text);
             cursor: pointer;
             border-radius: 3px;
-            box-sizing: border-box;
-            max-width: 100%;
-            overflow: hidden;
         }
 
         .cell-item:last-child {
@@ -305,9 +302,6 @@
     </style>
 </head>
 <body>
-    <!-- Skip link for keyboard users -->
-    <a href="#main-content" class="skip-link">Skip to main content</a>
-    
     <!-- Status region for screen reader announcements -->
     <div id="status" aria-live="polite" aria-atomic="true" class="sr-only"></div>
     
@@ -325,9 +319,9 @@
                 <div class="empty-state-hint">Configure the column mappings above to see your data in grid format</div>
             </div>
             
-            <main id="main-content">
+            <main>
                 <table id="gridTable" class="grid-table" style="display: none;" role="table">
-                    <caption id="gridCaption">Interactive data grid</caption>
+                    <caption id="gridCaption" class="sr-only">Data grid</caption>
                     <thead id="gridHeader"></thead>
                     <tbody id="gridBody"></tbody>
                 </table>

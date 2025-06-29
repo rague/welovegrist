@@ -710,6 +710,12 @@ class GristGridWidget {
                     emptyItem.setAttribute('tabindex', '0');
                     emptyItem.textContent = '';
                     
+                    // Add click handler for empty items
+                    emptyItem.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        this.activateItem(emptyItem);
+                    });
+                    
                     contentDiv.appendChild(emptyItem);
                     cell.appendChild(contentDiv);
                 }

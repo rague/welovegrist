@@ -202,8 +202,8 @@
             flex: 1;
         }
 
-        .cell-item.empty-item:hover,
-        .cell-item.empty-item.hover-default {
+        .cell-item.empty-item:hover:not(:focus),
+        .cell-item.empty-item.hover-default:not(:focus) {
             outline: 2px dotted var(--grist-theme-text-light);
             outline-offset: -1px;
         }

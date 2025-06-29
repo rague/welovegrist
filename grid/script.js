@@ -116,8 +116,9 @@ class GristGridWidget {
      * Activate a grid item (same as clicking)
      */
     activateItem(item) {
-        // Only activate items that have a record ID (not empty items)
-        if (!item.classList.contains('empty-item')) {
+        if (item.classList.contains('empty-item')) {
+            grist.setCursorPos({rowId: 'new'});
+        } else {
             const recordId = parseInt(item.dataset.recordId);
             if (recordId) {
                 this.selectRecord(recordId);

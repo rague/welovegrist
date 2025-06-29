@@ -130,43 +130,115 @@ class GristGridWidget {
     }
     
     /**
-     * Move focus to adjacent items
+     * Move focus with bounded spatial navigation
      */
     moveFocus(direction, currentItem) {
-        const allItems = Array.from(document.querySelectorAll('.cell-item'));
-        const currentIndex = allItems.indexOf(currentItem);
-        
-        if (currentIndex === -1) return;
-        
-        let newIndex;
+        const currentCell = currentItem.closest('td');
+        if (!currentCell) return;
         
         switch (direction) {
             case 'right':
-                newIndex = Math.min(currentIndex + 1, allItems.length - 1);
+                this.moveToColumn(currentCell, 'right');
                 break;
             case 'left':
-                newIndex = Math.max(currentIndex - 1, 0);
+                this.moveToColumn(currentCell, 'left');
                 break;
             case 'down':
-                // Try to find item in next row, same column position
-                newIndex = this.findVerticalNeighbor(currentItem, allItems, 'down');
+                this.moveWithinCellOrRow(currentItem, currentCell, 'down');
                 break;
             case 'up':
-                // Try to find item in previous row, same column position
-                newIndex = this.findVerticalNeighbor(currentItem, allItems, 'up');
+                this.moveWithinCellOrRow(currentItem, currentCell, 'up');
                 break;
             case 'home':
-                newIndex = 0;
+                const firstItem = document.querySelector('.cell-item');
+                if (firstItem) firstItem.focus();
                 break;
             case 'end':
-                newIndex = allItems.length - 1;
+                const allItems = document.querySelectorAll('.cell-item');
+                const lastItem = allItems[allItems.length - 1];
+                if (lastItem) lastItem.focus();
                 break;
-            default:
-                return;
+        }
+    }
+    
+    /**
+     * Move to adjacent column (bounded navigation)
+     */
+    moveToColumn(currentCell, direction) {
+        const currentRow = currentCell.closest('tr');
+        const cellIndex = Array.from(currentRow.cells).indexOf(currentCell);
+        
+        let targetCellIndex;
+        if (direction === 'right') {
+            targetCellIndex = cellIndex + 1;
+        } else {
+            targetCellIndex = cellIndex - 1;
         }
         
-        if (newIndex !== undefined && newIndex !== currentIndex && allItems[newIndex]) {
-            allItems[newIndex].focus();
+        // Check bounds - don't move if at edge
+        if (targetCellIndex < 0 || targetCellIndex >= currentRow.cells.length) {
+            return; // Bounded: no movement at grid edges
+        }
+        
+        const targetCell = currentRow.cells[targetCellIndex];
+        if (targetCell) {
+            const targetItems = targetCell.querySelectorAll('.cell-item');
+            if (targetItems.length > 0) {
+                targetItems[0].focus();
+            }
+        }
+    }
+    
+    /**
+     * Move within cell items or to adjacent row (bounded)
+     */
+    moveWithinCellOrRow(currentItem, currentCell, direction) {
+        const cellItems = Array.from(currentCell.querySelectorAll('.cell-item'));
+        const currentIndexInCell = cellItems.indexOf(currentItem);
+        
+        if (direction === 'down') {
+            if (currentIndexInCell < cellItems.length - 1) {
+                // Move to next item within same cell
+                cellItems[currentIndexInCell + 1].focus();
+            } else {
+                // Try to move to next row, same column
+                this.moveToRow(currentCell, 'down');
+            }
+        } else { // direction === 'up'
+            if (currentIndexInCell > 0) {
+                // Move to previous item within same cell
+                cellItems[currentIndexInCell - 1].focus();
+            } else {
+                // Try to move to previous row, same column
+                this.moveToRow(currentCell, 'up');
+            }
+        }
+    }
+    
+    /**
+     * Move to adjacent row (bounded navigation)
+     */
+    moveToRow(currentCell, direction) {
+        const currentRow = currentCell.closest('tr');
+        const cellIndex = Array.from(currentRow.cells).indexOf(currentCell);
+        
+        let targetRow;
+        if (direction === 'down') {
+            targetRow = currentRow.nextElementSibling;
+        } else {
+            targetRow = currentRow.previousElementSibling;
+        }
+        
+        // Check bounds - don't move if at edge
+        if (!targetRow || !targetRow.cells[cellIndex]) {
+            return; // Bounded: no movement at grid edges
+        }
+        
+        const targetCell = targetRow.cells[cellIndex];
+        const targetItems = targetCell.querySelectorAll('.cell-item');
+        if (targetItems.length > 0) {
+            const targetItem = direction === 'down' ? targetItems[0] : targetItems[targetItems.length - 1];
+            targetItem.focus();
         }
     }
     

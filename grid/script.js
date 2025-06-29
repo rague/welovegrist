@@ -118,6 +118,9 @@ class GristGridWidget {
     activateItem(item) {
         if (item.classList.contains('empty-item')) {
             grist.setCursorPos({rowId: 'new'});
+            this.selectedRecordId = null;
+            this.updateSelection();
+            item.classList.add('selected');
         } else {
             const recordId = parseInt(item.dataset.recordId);
             if (recordId) {

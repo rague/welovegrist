@@ -715,6 +715,52 @@ class GristGridWidget {
             
             this.elements.gridBody.appendChild(row);
         });
+        
+        // Equalize cell heights after rendering
+        this.equalizeRowHeights();
+    }
+    
+    /**
+     * Equalize cell heights within each row
+     */
+    equalizeRowHeights() {
+        // Wait for DOM to be fully rendered
+        requestAnimationFrame(() => {
+            const rows = this.elements.gridBody.querySelectorAll('tr');
+            
+            rows.forEach(row => {
+                // Get all data cells (not headers)
+                const cells = row.querySelectorAll('td.grid-cell');
+                if (cells.length === 0) return;
+                
+                // Reset heights for proper measurement
+                cells.forEach(cell => {
+                    const cellContent = cell.querySelector('.cell-content');
+                    if (cellContent) {
+                        cellContent.style.height = '';
+                    }
+                });
+                
+                // Force reflow to get natural heights
+                row.offsetHeight;
+                
+                // Calculate maximum height for this row
+                const maxHeight = Math.max(...Array.from(cells).map(cell => cell.offsetHeight));
+                
+                // Apply max height to all .cell-content elements
+                cells.forEach(cell => {
+                    const cellContent = cell.querySelector('.cell-content');
+                    if (cellContent) {
+                        cellContent.style.height = maxHeight + 'px';
+                        // For empty cells, also set the empty-item to fill the height
+                        const emptyItem = cellContent.querySelector('.cell-item.empty-item');
+                        if (emptyItem) {
+                            emptyItem.style.height = '100%';
+                        }
+                    }
+                });
+            });
+        });
     }
     
     /**

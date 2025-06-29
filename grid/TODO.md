@@ -2,8 +2,8 @@
 
 ## Known Issues 🐛
 
-- [ ] Keyboard navigation within cells containing multiple items needs improvement
-- [ ] Non-empty items should also fill the full height of their cell content
+- [x] Keyboard navigation within cells containing multiple items needs improvement
+- [x] Non-empty items should also fill the full height of their cell content
 
 ## Potential Improvements 💡
 - [ ] Make filtering of empty rows and columns optional
